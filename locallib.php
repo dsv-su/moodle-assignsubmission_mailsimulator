@@ -67,7 +67,3 @@ class assign_submission_mailsimulator extends assign_submission_plugin {
     }
     
 }
-e;
-    }
-    
-}
