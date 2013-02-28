@@ -21,7 +21,7 @@ function xmldb_assignsubmission_mailsimulator_upgrade($oldversion) {
 
     $dbman = $DB->get_manager();
 
-    if ($oldversion < 2013022700) {
+    if ($oldversion < 2013022801) {
 
         // Define table assignsubmission_mail to be created
         $table = new xmldb_table('assignsubmission_mail');
@@ -43,7 +43,7 @@ function xmldb_assignsubmission_mailsimulator_upgrade($oldversion) {
         }
 
         // mailsimulator savepoint reached
-        upgrade_plugin_savepoint(true, 2013022700, 'assignsubmission', 'mailsimulator');
+        upgrade_plugin_savepoint(true, 2013022801, 'assignsubmission', 'mailsimulator');
     }
 
     return true;
