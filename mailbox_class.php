@@ -12,11 +12,9 @@ class mailbox {
     private $course;
 
     public function __construct($context, $cm, $course) {
-        global $PAGE;
-
-        $this->context = $context;
-        $this->cm = $cm;
-        $this->course = $course;
+        $this->context  = $context;
+        $this->cm       = $cm;
+        $this->course   = $course;
         //$this->url = new moodle_url('/mod/assign/submission/mailsimulator/mailbox.php', array("id"=>$cmid));
     }
     
@@ -25,7 +23,20 @@ class mailbox {
 
         //$teacher = has_capability('mod/assignment:grade', $this->context);
 
+        $readyforgrading = optional_param('readyforgrading', 0, PARAM_INT);
+
         $this->view_mailbox();
+var_dump($this->cm);
+        //var_dump($this->assignment->get_instance());
+        
+       // if ($readyforgrading==1) {$this->submit_for_grading();}
+
+        print_single_button('../../view.php?id=' . $this->cm->id, array('action' => 'savesubmission'),
+                    'I am ready for grading', 'post', 'self', false, '', $dissabled);
+    }
+
+    function submit_for_grading() {
+        var_dump($this->cm);
     }
 
     function view_mailbox() {

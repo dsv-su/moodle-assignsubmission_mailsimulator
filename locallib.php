@@ -35,7 +35,10 @@ class assign_submission_mailsimulator extends assign_submission_plugin {
         $mform->disabledIf('assignsubmission_file_enabled', 'assignsubmission_mailsimulator_enabled', 'eq', 1);
         $mform->disabledIf('assignsubmission_blog_enabled', 'assignsubmission_mailsimulator_enabled', 'eq', 1);
         $mform->disabledIf('assignsubmission_onlinetext_enabled', 'assignsubmission_mailsimulator_enabled', 'eq', 1);
-
+        $mform->setDefault('submissiondrafts', 1);
+        $mform->disabledIf('submissiondrafts', 'assignsubmission_mailsimulator_enabled', 'eq', 1);
+        $mform->setDefault('teamsubmission', 0);
+        $mform->disabledIf('teamsubmission', 'assignsubmission_mailsimulator_enabled', 'eq', 1);        
     }
 
     /**
@@ -54,16 +57,60 @@ class assign_submission_mailsimulator extends assign_submission_plugin {
      * @param mixed $submission stdClass|null
      * @param MoodleQuickForm $mform
      * @param stdClass $data
-     * @global stdClass #USER
-     * @global stdClass $COURSE
      * @return bool
      */
     public function get_form_elements($submission, MoodleQuickForm $mform, stdClass $data) {
         $cmid = required_param('id', PARAM_INT);
         $mailboxurl = new moodle_url('/mod/assign/submission/mailsimulator/mailbox.php', array("id"=>$cmid));
         redirect($mailboxurl);
-
         return true;
     }
+
+
+    /**
+     * Displays all submitted items for this assignment from a specified student.
+     *
+     * @param stdClass $submission
+     * @return string
+     */
+    public function view(stdClass $submission) {
+        global $CFG, $DB, $OUTPUT;
+
+        return 'Here submission goes';
+
+    }    
     
+    /**
+     * Displays the summary of the submission
+     *
+     * @param stdClass $submission The submission to show a summary of
+     * @param bool $showviewlink Will be set to true to enable the view link
+     * @return string
+     */
+
+    public function view_summary(stdClass $submission, & $showviewlink) {
+        global $DB;
+
+        $showviewlink = true;
+
+        $divclass = 'submissionstatussubmitted';
+
+        $result = html_writer::start_tag('div', array('class' => $divclass));
+        $result .= 'Submission summary';
+        $result .= html_writer::end_tag('div');
+
+        return $result;
+
+    }
+
+    /**
+     * Produce a list of files suitable for export that represents this submission
+     * 
+     * @param stdClass $submission
+     * @return array an array of files indexed by filename
+     */
+    public function get_files(stdClass $submission) {
+        global $DB, $CFG;
+    }
+
 }
