@@ -28,6 +28,7 @@ class assign_submission_mailsimulator extends assign_submission_plugin {
      * @param MoodleQuickForm $mform The form to append the elements to.
      */
     public function get_settings(MoodleQuickForm $mform) {
+        $cmid = optional_param('update', 0, PARAM_INT);
 
         $mform->setDefault('assignsubmission_file_enabled', 0);
         $mform->setDefault('assignsubmission_blog_enabled', 0);

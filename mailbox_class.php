@@ -33,7 +33,7 @@ class mailbox {
             $this->view_mailbox();
             $this->update_user_submission($USER->id);
         } else {
-            echo html_writer::tag('div', 'You cannot view the mailbox since you have already sent this assignment for grading', array('align'=>'center'));
+            echo $OUTPUT->notification('You cannot view the mailbox since you have already sent this assignment for grading');
             echo html_writer::empty_tag('br');
         }
 
