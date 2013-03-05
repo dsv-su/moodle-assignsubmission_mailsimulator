@@ -10,6 +10,7 @@
 
 $string['mailsimulator'] = 'Mail Simulator submission';
 $string['mailboxes'] = "Mailboxes";
+$string['mailadmin'] = "Mail Simulator admin page";
 $string['inbox'] = "Inbox";
 $string['sent'] = "Sent";
 $string['enabled'] = 'Online text';

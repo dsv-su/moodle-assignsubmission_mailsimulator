@@ -20,7 +20,6 @@ class assign_submission_mailsimulator extends assign_submission_plugin {
      */
     public function get_name() {
         return get_string('mailsimulator', 'assignsubmission_mailsimulator');
-    
     }
 
     /**
@@ -29,6 +28,7 @@ class assign_submission_mailsimulator extends assign_submission_plugin {
      * @param MoodleQuickForm $mform The form to append the elements to.
      */
     public function get_settings(MoodleQuickForm $mform) {
+
         $mform->setDefault('assignsubmission_file_enabled', 0);
         $mform->setDefault('assignsubmission_blog_enabled', 0);
         $mform->setDefault('assignsubmission_online_enabled', 0);
@@ -38,7 +38,13 @@ class assign_submission_mailsimulator extends assign_submission_plugin {
         $mform->setDefault('submissiondrafts', 1);
         $mform->disabledIf('submissiondrafts', 'assignsubmission_mailsimulator_enabled', 'eq', 1);
         $mform->setDefault('teamsubmission', 0);
-        $mform->disabledIf('teamsubmission', 'assignsubmission_mailsimulator_enabled', 'eq', 1);        
+        $mform->disabledIf('teamsubmission', 'assignsubmission_mailsimulator_enabled', 'eq', 1);  
+
+        $mailadminlink = html_writer::link(new moodle_url('/mod/assign/submission/mailsimulator/mailadmin.php', array('id'=>$cmid)), 
+            get_string('mailadmin','assignsubmission_mailsimulator'), array('target' => '_blank'));
+        
+        $mform->addElement('static', 'assignsubmission_mailsimulator_mailadmin', '', $mailadminlink); 
+        $mform->disabledIf('assignsubmission_mailsimulator_mailadmin', 'assignsubmission_mailsimulator_enabled', 'eq', 0);
     }
 
     /**

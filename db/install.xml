@@ -1,20 +1,68 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="mod/assign/submission/mailsimulator/db" VERSION="20130227" COMMENT="XMLDB file for Moodle mod/assign/submission/mailsimulator"
+<XMLDB PATH="mod/assign/submission/mailsimulator/db" VERSION="20130305" COMMENT="XMLDB file for Moodle mod/assign/submission/mailsimulator"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../../../lib/xmldb/xmldb.xsd"
 >
   <TABLES>
-    <TABLE NAME="assignsubmission_mail" COMMENT="Info about submitted assignments">
+    <TABLE NAME="assignsubmission_mail_cntct" COMMENT="Dummy contacts" NEXT="assignsubmission_mail_mail">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" NEXT="assignment"/>
-        <FIELD NAME="assignment" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="id" NEXT="submission"/>
-        <FIELD NAME="submission" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="assignment" NEXT="text"/>
-        <FIELD NAME="text" TYPE="text" NOTNULL="false" SEQUENCE="false" PREVIOUS="submission"/>
+        <FIELD NAME="assignment" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" PREVIOUS="id" NEXT="firstname"/>
+        <FIELD NAME="firstname" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false" PREVIOUS="assignment" NEXT="lastname"/>
+        <FIELD NAME="lastname" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false" PREVIOUS="firstname" NEXT="email"/>
+        <FIELD NAME="email" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false" PREVIOUS="lastname"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id" NEXT="assignment"/>
-        <KEY NAME="assignment" TYPE="foreign" FIELDS="assignment" REFTABLE="assign" REFFIELDS="id" PREVIOUS="primary" NEXT="submission"/>
-        <KEY NAME="submission" TYPE="foreign" FIELDS="submission" REFTABLE="assignsubmission" REFFIELDS="id" PREVIOUS="assignment"/>
+        <KEY NAME="assignment" TYPE="foreign" FIELDS="assignment" REFTABLE="assign" REFFIELDS="id" PREVIOUS="primary"/>
+      </KEYS>
+    </TABLE>
+    <TABLE NAME="assignsubmission_mail_mail" COMMENT="The emails" PREVIOUS="assignsubmission_mail_cntct" NEXT="assignsubmission_mail_tmplt">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" NEXT="parent"/>
+        <FIELD NAME="parent" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" PREVIOUS="id" NEXT="assignment"/>
+        <FIELD NAME="assignment" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" PREVIOUS="parent" NEXT="userid"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" PREVIOUS="assignment" NEXT="sender"/>
+        <FIELD NAME="sender" TYPE="int" LENGTH="10" NOTNULL="false" DEFAULT="0" SEQUENCE="false" PREVIOUS="userid" NEXT="receiver"/>
+        <FIELD NAME="receiver" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" PREVIOUS="sender" NEXT="priority"/>
+        <FIELD NAME="priority" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" PREVIOUS="receiver" NEXT="subject"/>
+        <FIELD NAME="subject" TYPE="text" NOTNULL="false" SEQUENCE="false" PREVIOUS="priority" NEXT="message"/>
+        <FIELD NAME="message" TYPE="text" NOTNULL="false" SEQUENCE="false" PREVIOUS="subject" NEXT="timesent"/>
+        <FIELD NAME="timesent" TYPE="int" LENGTH="10" NOTNULL="false" DEFAULT="0" SEQUENCE="false" PREVIOUS="message" NEXT="attachment"/>
+        <FIELD NAME="attachment" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" PREVIOUS="timesent"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id" NEXT="assignment"/>
+        <KEY NAME="assignment" TYPE="foreign" FIELDS="assignment" REFTABLE="assign" REFFIELDS="id" PREVIOUS="primary" NEXT="userid"/>
+        <KEY NAME="userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id" PREVIOUS="assignment"/>
+      </KEYS>
+    </TABLE>
+    <TABLE NAME="assignsubmission_mail_tmplt" COMMENT="Correction templates" PREVIOUS="assignsubmission_mail_mail" NEXT="assignsubmission_mail_sgndml">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" NEXT="mailid"/>
+        <FIELD NAME="mailid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" PREVIOUS="id" NEXT="randgroup"/>
+        <FIELD NAME="randgroup" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" PREVIOUS="mailid" NEXT="correctiontemplate"/>
+        <FIELD NAME="correctiontemplate" TYPE="text" NOTNULL="false" SEQUENCE="false" PREVIOUS="randgroup" NEXT="deleted"/>
+        <FIELD NAME="deleted" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" PREVIOUS="correctiontemplate"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id" NEXT="mailid"/>
+        <KEY NAME="mailid" TYPE="foreign" FIELDS="mailid" REFTABLE="assignsubmission_mail_mail" REFFIELDS="id" PREVIOUS="primary"/>
+      </KEYS>
+    </TABLE>
+    <TABLE NAME="assignsubmission_mail_sgndml" COMMENT="Emails that has been assigned to a students along with feedback given" PREVIOUS="assignsubmission_mail_tmplt">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" NEXT="mailid"/>
+        <FIELD NAME="mailid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" PREVIOUS="id" NEXT="userid"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" PREVIOUS="mailid" NEXT="gainedweight"/>
+        <FIELD NAME="gainedweight" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" PREVIOUS="userid" NEXT="feedback"/>
+        <FIELD NAME="feedback" TYPE="text" NOTNULL="false" SEQUENCE="false" PREVIOUS="gainedweight" NEXT="status"/>
+        <FIELD NAME="status" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" PREVIOUS="feedback"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id" NEXT="mailid"/>
+        <KEY NAME="mailid" TYPE="foreign" FIELDS="mailid" REFTABLE="assignsubmission_mail_mail" REFFIELDS="id" PREVIOUS="primary" NEXT="userid"/>
+        <KEY NAME="userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id" PREVIOUS="mailid"/>
       </KEYS>
     </TABLE>
   </TABLES>

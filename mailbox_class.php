@@ -1,6 +1,7 @@
 <?php
 
 require_once(dirname(__FILE__).'/../../../../config.php');
+require_once($CFG->dirroot.'/mod/assign/locallib.php');
 global $CFG, $DB, $PAGE;
 
 class mailbox {
@@ -15,28 +16,61 @@ class mailbox {
         $this->context  = $context;
         $this->cm       = $cm;
         $this->course   = $course;
-        //$this->url = new moodle_url('/mod/assign/submission/mailsimulator/mailbox.php', array("id"=>$cmid));
+
+        /*
+        $this->context; // Is a course context
+        context_module::instance($this->cm->id)); // Is a module context
+        We have to check the latter.
+        */
     }
     
     function view() {
-        global $OUTPUT;
+        global $OUTPUT, $USER, $DB;
 
-        //$teacher = has_capability('mod/assignment:grade', $this->context);
+        $existingsubmission = $this->user_have_registered_submission($USER->id, $this->cm->instance);
 
-        $readyforgrading = optional_param('readyforgrading', 0, PARAM_INT);
+        if ($existingsubmission->status<>'submitted') {
+            $this->view_mailbox();
+            $this->update_user_submission($USER->id);
+        } else {
+            echo html_writer::tag('div', 'You cannot view the mailbox since you have already sent this assignment for grading', array('align'=>'center'));
+            echo html_writer::empty_tag('br');
+        }
 
-        $this->view_mailbox();
-var_dump($this->cm);
-        //var_dump($this->assignment->get_instance());
-        
-       // if ($readyforgrading==1) {$this->submit_for_grading();}
+        echo html_writer::tag('div', html_writer::link('../../view.php?id=' . $this->cm->id, 'Back to the assignment start page'), array('align'=>'center'));
 
-        print_single_button('../../view.php?id=' . $this->cm->id, array('action' => 'savesubmission'),
-                    'I am ready for grading', 'post', 'self', false, '', $dissabled);
     }
 
-    function submit_for_grading() {
-        var_dump($this->cm);
+    /**
+     * Check if a user have a registered submission to an assignment.
+     *
+     * @param mixed $userid
+     * @param mixed $assignment_instance
+     * @return mixed False if no submission, else the submission record.
+     */
+    function user_have_registered_submission($userid, $assignment_instance) {
+        global $DB;
+
+        $submission = $DB->get_record('assign_submission', array(
+            'assignment' => $assignment_instance,
+            'userid' => $userid
+        ));
+
+        return $submission;
+    }
+
+    function update_user_submission($userid) {
+        global $DB;
+
+        $existingsubmission = $this->user_have_registered_submission($userid, $this->cm->instance);
+
+        $assign = new assign($this->context, $this->cm, null);
+        $submission = $assign->get_user_submission($userid, true);        
+
+        if ($existingsubmission) {
+            $submission->timemodified = time();
+            $DB->update_record('assign_submission', $submission);
+        } 
     }
 
     function view_mailbox() {
