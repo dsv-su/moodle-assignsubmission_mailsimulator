@@ -8,6 +8,8 @@ $id   = required_param('id', PARAM_INT);
 $cm     = get_coursemodule_from_id('assign', $id, 0, false, MUST_EXIST);
 $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
 
+$context = context_course::instance($course->id);
+
 require_login($course);
 
 echo $OUTPUT->header();
@@ -16,6 +18,9 @@ $PAGE->set_url('/mod/assign/submission/mailsimulator/contacts.php');
 $PAGE->set_title('Contacts');
 $PAGE->set_pagelayout('standard');
 
+require($CFG->dirroot.'/mod/assign/submission/mailsimulator/mailbox_class.php');
+$mailboxinstance = new mailbox($context, $cm, $course);
+
 require_once($CFG->dirroot.'/mod/assign/submission/mailsimulator/contacts_form.php');
 
 //Instantiate simplehtml_form 
@@ -23,7 +28,9 @@ $mform = new contacts_form(null, array("moduleID"=>$id));
  
 //Form processing and displaying is done here
 if ($mform->is_cancelled()) {
-    var_dump("cancel");
+
+    //***TO BE ADDED***
+
     //Handle form cancel operation, if cancel button is present on form
 } else if ($fromform = $mform->get_data()) {
   //In this case you process validated data. $mform->get_data() returns data posted in form.
@@ -39,7 +46,7 @@ if ($mform->is_cancelled()) {
                 $contact->id = $existingRecord->id;
 
                 if(strlen($contact->firstname.$contact->lastname.$contact->email) == 0) {
-                  //  $assignmentinstance->delete_contact($contact->id);
+                    $mailboxinstance->delete_contact($contact->id);
                 } else {
                     $DB->update_record('assignsubmission_mail_cntct', $contact);
                 }

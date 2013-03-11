@@ -2,7 +2,8 @@
 
 require_once(dirname(__FILE__).'/../../../../config.php');
 require_once($CFG->dirroot.'/mod/assign/locallib.php');
-global $CFG, $DB, $PAGE;
+
+DEFINE('TO_STUDENT_ID', 9999999); // To identify when a mail is sent to a student
 
 class mailbox {
 
@@ -71,6 +72,117 @@ class mailbox {
             $submission->timemodified = time();
             $DB->update_record('assign_submission', $submission);
         } 
+    }
+
+    function delete_contact($contactid) {
+        global $CFG, $DB, $OUTPUT;
+
+        // Check if contact is in use.
+        if (!$active = $DB->record_exists('assignsubmission_mail_mail', array('receiver' => $contactid))) {
+            $active = $DB->record_exists('assignsubmission_mail_mail', array('userid' => 0, 'sender' => $contactid));
+        }
+
+        if ($active) {
+            $contact = $DB->get_record('assignsubmission_mail_cntct', array('id' => $contactid)); 
+            $msg = get_string('contactinuse', 'assignsubmission_mailsimulator');
+            $msg .= '<br />' . $contact->firstname . ' ' . $contact->lastname . ' &lt;' . $contact->email . '&gt<br />';
+            echo $OUTPUT->error_text($msg);
+        } else {
+            $DB->delete_records('assignsubmission_mail_cntct', array('id' => $contactid));
+        } 
+    }
+
+    function prepare_mail($parent=0, $from=0, $priority=0) {
+        global $USER, $CFG, $DB;
+
+        $teacher = has_capability('mod/assignment:grade', get_context_instance(CONTEXT_MODULE, $this->cm->id));
+
+        $mail = new stdClass;
+        $mail->userid = 0;              // 0 = assignment mail
+        $mail->teacher = $teacher;
+
+        if (!$teacher) {
+            $mail->userid = $USER->id;  // !0 = student mail
+        }
+        $mail->mailid = 0;
+        $mail->parent = $parent;        // 0 = new mail, 1 = reply
+        $mail->assignment = (integer) $this->cm->id;
+        $mail->priority = $priority;
+        $mail->sender = $from;
+        $mail->subject = '';
+        $mail->message = '';
+        $mail->timesent = '';
+
+        $contacts = $DB->get_records('assignsubmission_mail_cntct', array('assignment' => $this->cm->id));
+
+        if ($contacts) {
+            foreach ($contacts as $key => $con) {
+                $contacts[$key] = $con->firstname . ' ' . $con->lastname . ' &lt;' . $con->email . '&gt;';
+            }
+        }
+        /* 
+
+        Teacher used to be retrieved from Assignment entry. It has to be changed.
+
+        $teacherid = $DB->get_field('assignment', 'var3', 'id', $this->assignment->id);
+        $teacherobj = $DB->get_record_select('user', 'id=' . $teacherid, 'firstname, lastname, email');
+        */
+
+        $studentobj = $DB->get_record_select('user', 'id = :id', array('id'=> $USER->id), 'firstname, lastname, email');
+        
+        //$contacts[0] = $teacherobj->firstname . ' ' . $teacherobj->lastname . ' &lt;' . $teacherobj->email . '&gt;';
+
+        if ($teacher) {
+            $contacts[TO_STUDENT_ID] = get_string('mailtostudent', 'assignsubmission_mailsimulator');
+        } else {
+            $contacts[TO_STUDENT_ID] = $studentobj->firstname . ' ' . $studentobj->lastname . ' &lt;' . $studentobj->email . '&gt;';
+        }
+
+        asort($contacts);
+
+        $mail->to = $contacts;
+
+        return $mail;
+    }
+
+    // Creates a new mail and returns the id or false
+    function insert_mail($mail, $gid=0) {
+        global $CFG, $USER, $DB;
+
+        $mailid = $DB->insert_record('assignsubmission_mail_mail', $mail);
+
+        if ($mailid) {
+            foreach ($mail->to as $to) {
+                $obj = new stdClass();
+                $obj->contactid = $to;
+                $obj->mailid = $mailid;
+
+                insert_record('assignment_mailsimulation_to', $obj);
+            }
+
+            if ($this->upload_attachment($mailid, $mail->userid)) {
+
+                $fileobj = new stdClass();
+                $fileobj->id = $mailid;
+                $fileobj->attachment = 1;
+
+                update_record('assignment_mailsimulation_mail', $fileobj);
+            }
+
+            if ($mail->parent == 0) {
+                $this->add_parent($mailid, $gid);
+            } else {
+                if (!has_capability('mod/assignment:grade', get_context_instance(CONTEXT_MODULE, $this->cm->id))) {
+
+                    $obj = $this->get_mail_status($mailid);
+                    $this->set_mail_status($obj->mailid, 2);
+                }
+            }
+
+            return $mailid;
+        }
+
+        return false;
     }
 
     function view_mailbox() {

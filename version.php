@@ -10,6 +10,6 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2013030500;
+$plugin->version   = 2013031100;
 $plugin->requires  = 2012120301.12;
 $plugin->component = 'assignsubmission_mailsimulator';
