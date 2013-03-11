@@ -13,7 +13,7 @@ class mail_form extends moodleform {
         $userid = optional_param('userid', 0, PARAM_INT);
 
         // Course Module Id
-        $mform->addElement('hidden', 'id', $cmid);
+        $mform->addElement('hidden', 'id', $id);
         $mform->setType('id', PARAM_INT);
 
         $mform->addElement('hidden', 'mailid', $this->_customdata->mailid);
@@ -64,7 +64,7 @@ class mail_form extends moodleform {
             $mform->addElement('hidden', 'timesent', time());
             $mform->setType('timesent', PARAM_INT);
         } else {
-            $from = $DB->get_field('assignsubmission_mail_mail', 'receiver', array('id' => $this->_customdata->parent));
+            $from = $DB->get_field('assignsubmission_mail_to', 'contactid', array('mailid' => $this->_customdata->parent));
             unset($to[9999999]);
 
             if ($from) {
@@ -110,20 +110,18 @@ class mail_form extends moodleform {
     function validation($data, $files) {
         $errors = array();
 
-        /*
         if (strlen(ltrim($data['subject'])) < 1) {
-            $errors['subject'] = get_string('err_emptysubject', 'assignment_mailsimulator');
+            $errors['subject'] = get_string('err_emptysubject', 'assignsubmission_mailsimulator');
         }
-        if (strlen(ltrim($data['message'])) < 1) {
-            $errors['message'] = get_string('err_emptymessage', 'assignment_mailsimulator');
+        if (strlen(ltrim($data['message']['text'])) < 1) {
+            $errors['message'] = get_string('err_emptymessage', 'assignsubmission_mailsimulator');
         }
         if ($data['timesent'] > time()) {
-            $errors['timesent'] = get_string('err_date', 'assignment_mailsimulator');
+            $errors['timesent'] = get_string('err_date', 'assignsubmission_mailsimulator');
         }
         if (!isset($data['to'])) {
-            $errors['to'] = get_string('err_reciever', 'assignment_mailsimulator');
+            $errors['to'] = get_string('err_reciever', 'assignsubmission_mailsimulator');
         }
-        */
 
         return $errors;
     }

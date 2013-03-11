@@ -58,23 +58,25 @@ echo '                  <tr>';
 echo '                      <td style="background-color:lightgray;">' . $mailstr;
 
 $customdata->reply = $re;
-
 $customdata = $mailboxinstance->prepare_mail();
-
 require_once($CFG->dirroot.'/mod/assign/submission/mailsimulator/mail_form.php');
 //Instantiate simplehtml_form 
 $mailform = new mail_form('?gid=' . $gid, $customdata);
 
 //Form processing and displaying is done here
 if ($mailform->is_cancelled()) {
+  var_dump('Cancel');
     //Handle form cancel operation, if cancel button is present on form
 } else if ($fromform = $mailform->get_data()) {
+  $fromform->message=serialize($fromform->message);
+  $fromform->assignment=$id;
+  $fromform->attachment=0;
   //In this case you process validated data. $mform->get_data() returns data posted in form.
     if ($mailform->is_validated()) {
         if ($DB->record_exists('assignsubmission_mail_mail', array('id' => $fromform->mailid))) {
            // $assignmentinstance->update_mail($fromform);
         } else {
-           // $assignmentinstance->insert_mail($fromform, $gid);
+          $mailboxinstance->insert_mail($fromform, $gid);
         }
 
        // redirect($CFG->wwwroot . '/mod/assignment/view.php?id=' . $cm->id, '', 0);

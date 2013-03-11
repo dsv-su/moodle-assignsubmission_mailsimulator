@@ -157,25 +157,25 @@ class mailbox {
                 $obj->contactid = $to;
                 $obj->mailid = $mailid;
 
-                insert_record('assignment_mailsimulation_to', $obj);
+                $DB->insert_record('assignsubmission_mail_to', $obj);
             }
-
+            /*
             if ($this->upload_attachment($mailid, $mail->userid)) {
 
                 $fileobj = new stdClass();
                 $fileobj->id = $mailid;
                 $fileobj->attachment = 1;
 
-                update_record('assignment_mailsimulation_mail', $fileobj);
+                $DB->update_record('assignsubmission_mail_mail', $fileobj);
             }
-
+            */
             if ($mail->parent == 0) {
-                $this->add_parent($mailid, $gid);
+              //  $this->add_parent($mailid, $gid);
             } else {
-                if (!has_capability('mod/assignment:grade', get_context_instance(CONTEXT_MODULE, $this->cm->id))) {
+                if (!has_capability('mod/assign:grade', context_module::instance($this->cm->id))) {
 
-                    $obj = $this->get_mail_status($mailid);
-                    $this->set_mail_status($obj->mailid, 2);
+                    //$obj = $this->get_mail_status($mailid);
+                    //$this->set_mail_status($obj->mailid, 2);
                 }
             }
 
