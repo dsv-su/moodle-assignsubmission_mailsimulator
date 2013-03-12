@@ -19,7 +19,7 @@ $string['comment'] = 'Comment';
 $string['confirmdelete'] = 'Are you shure you whant to delete this mail and attachments?';
 $string['contactinuse'] = 'This contact is in use and can therefore not be deleted.';
 $string['contact'] = 'Contact';
-$string['correctiontemplate'] = 'Correctiontemplate';
+$string['correctiontemplate'] = 'Correction Template';
 $string['deletecontact'] = 'To delete a contact, clear its three fields.';
 $string['disableattachments'] = 'Disable attachments';
 $string['dummy'] = 'Dummy';
@@ -49,7 +49,7 @@ $string['medium'] = 'medium';
 $string['message'] = 'Message';
 $string['needcompletion'] = 'Need completion';
 $string['newcontact'] = 'New contact';
-$string['newcorrectiontemplate'] = 'New Correctiontemplate';
+$string['newcorrectiontemplate'] = 'New correction template';
 $string['newmail'] = 'New Mail';
 $string['noanswer'] = 'No Answer';
 $string['nonewstudentmail'] = 'No new student mail';
@@ -70,11 +70,14 @@ $string['timemarked'] = 'TIMEMARKED';
 $string['timesent'] = 'Time sent';
 $string['trash'] = 'Trash';
 $string['typemailsimulator'] = 'Mail Simulator';
-$string['updatecorrectiontemplate'] = 'Update correctiontemplate / Weight';
+$string['updatecorrectiontemplate'] = 'Update a correction template / weight';
 $string['vieweditmail'] = 'View/Edit Mail';
-$string['weight'] = 'Weight';
+
 $string['weight_maxweight'] = 'Weigt / Maxweight';
 $string['wrote'] = '$a wrote';
+
+$string['weight'] = 'Weight';
+$string['weight_help'] = "Weight BLA HELP.";
 
 $string['mailsimulator'] = 'Mail Simulator submission';
 $string['mailadmin'] = "Mail Simulator admin page";

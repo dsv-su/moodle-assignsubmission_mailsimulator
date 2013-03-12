@@ -95,7 +95,7 @@ class mailbox {
     function prepare_mail($parent=0, $from=0, $priority=0) {
         global $USER, $CFG, $DB;
 
-        $teacher = has_capability('mod/assignment:grade', get_context_instance(CONTEXT_MODULE, $this->cm->id));
+        $teacher = has_capability('mod/assign:grade', context_module::instance($this->cm->id));
 
         $mail = new stdClass;
         $mail->userid = 0;              // 0 = assignment mail
@@ -143,6 +143,35 @@ class mailbox {
         $mail->to = $contacts;
 
         return $mail;
+    }
+
+    function prepare_parent($mailid=0, $group=0) {
+        global $DB;        
+
+        $templatemail = new stdClass;
+        //$parentmail->maxweight = $DB->get_field('assignment', 'var2', 'id', $this->assignment->id);
+        $templatemail->maxweight = 5; // TEMP VALUE!!!
+        $templatemail->id = 0;
+
+        if ($mailid) {
+            $id = $DB->get_field('assignsubmission_mail_tmplt', 'id', array('mailid' => $mailid));
+            if ($id) {
+                $templatemail->id = $id;
+            }
+        }
+        $templatemail->mailid = $mailid;
+        $templatemail->randgroup = $group;
+
+        // If assignment parent
+        if (has_capability('mod/assign:grade', context_module::instance($this->cm->id)) && !$group) {
+            //$templatemail->randgroup = $this->calculate_group();
+        }
+
+        $templatemail->weight = 0;
+        $templatemail->correctiontemplate = '';
+        $templatemail->deleted = 0;
+
+        return $templatemail;
     }
 
     // Creates a new mail and returns the id or false

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="mod/assign/submission/mailsimulator/db" VERSION="20130311" COMMENT="XMLDB file for Moodle mod/assign/submission/mailsimulator"
+<XMLDB PATH="mod/assign/submission/mailsimulator/db" VERSION="20130312" COMMENT="XMLDB file for Moodle mod/assign/submission/mailsimulator"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../../../lib/xmldb/xmldb.xsd"
 >
@@ -40,8 +40,9 @@
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" NEXT="mailid"/>
         <FIELD NAME="mailid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" PREVIOUS="id" NEXT="randgroup"/>
-        <FIELD NAME="randgroup" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" PREVIOUS="mailid" NEXT="correctiontemplate"/>
-        <FIELD NAME="correctiontemplate" TYPE="text" NOTNULL="false" SEQUENCE="false" PREVIOUS="randgroup" NEXT="deleted"/>
+        <FIELD NAME="randgroup" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" PREVIOUS="mailid" NEXT="weight"/>
+        <FIELD NAME="weight" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" PREVIOUS="randgroup" NEXT="correctiontemplate"/>
+        <FIELD NAME="correctiontemplate" TYPE="text" NOTNULL="false" SEQUENCE="false" PREVIOUS="weight" NEXT="deleted"/>
         <FIELD NAME="deleted" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" PREVIOUS="correctiontemplate"/>
       </FIELDS>
       <KEYS>

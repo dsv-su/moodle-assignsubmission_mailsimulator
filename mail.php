@@ -1,7 +1,6 @@
 <?php
 
 require_once(dirname(__FILE__).'/../../../../config.php');
-//require_once($CFG->dirroot.'/mod/assign/locallib.php');
 global $CFG, $DB, $PAGE, $COURSE;
 
 $id   = required_param('id', PARAM_INT);
@@ -58,7 +57,7 @@ echo '                  <tr>';
 echo '                      <td style="background-color:lightgray;">' . $mailstr;
 
 $customdata->reply = $re;
-$customdata = $mailboxinstance->prepare_mail();
+
 require_once($CFG->dirroot.'/mod/assign/submission/mailsimulator/mail_form.php');
 //Instantiate simplehtml_form 
 $mailform = new mail_form('?gid=' . $gid, $customdata);
@@ -69,7 +68,6 @@ if ($mailform->is_cancelled()) {
     //Handle form cancel operation, if cancel button is present on form
 } else if ($fromform = $mailform->get_data()) {
   $fromform->message=serialize($fromform->message);
-  $fromform->assignment=$id;
   $fromform->attachment=0;
   //In this case you process validated data. $mform->get_data() returns data posted in form.
     if ($mailform->is_validated()) {

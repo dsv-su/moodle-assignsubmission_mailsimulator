@@ -19,6 +19,9 @@ class mail_form extends moodleform {
         $mform->addElement('hidden', 'mailid', $this->_customdata->mailid);
         $mform->setType('mailid', PARAM_INT);
 
+        $mform->addElement('hidden', 'assignment', $this->_customdata->assignment);
+        $mform->setType('assignment', PARAM_INT);
+
         $mform->addElement('hidden', 'parent', $this->_customdata->parent);
         $mform->setType('parent', PARAM_INT);
 
