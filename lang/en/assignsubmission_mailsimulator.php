@@ -74,7 +74,7 @@ $string['updatecorrectiontemplate'] = 'Update a correction template / weight';
 $string['vieweditmail'] = 'View/Edit Mail';
 
 $string['weight_maxweight'] = 'Weigt / Maxweight';
-$string['wrote'] = '$a wrote';
+$string['wrote'] = '{$a} wrote';
 
 $string['weight'] = 'Weight';
 $string['weight_help'] = "Weight BLA HELP.";

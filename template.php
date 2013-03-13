@@ -3,7 +3,7 @@
 require_once(dirname(__FILE__).'/../../../../config.php');
 global $CFG, $DB, $PAGE, $COURSE;
 
-// Get course ID and assignment ID
+// Get course ID and mail ID
 $id = optional_param('id', 0, PARAM_INT);         // Course module ID
 $mid = optional_param('mid', 0, PARAM_INT);       // Mail ID
 $gid = optional_param('gid', 0, PARAM_INT);       // Group ID
@@ -26,14 +26,14 @@ if ($mid) {
         echo $OUTPUT->error_text("Mail ID is incorrect");
     }
 
-    //$mail = $mailboxinstance->get_nested_reply_object($mailobj);
+    $mail = $mailboxinstance->get_nested_reply_object($mailobj);
 
     if (!$mail) {
         $mail = $mailobj;
+        $mail->message = unserialize($mail->message)["text"];
     }
 
-    $mailstr = '<div style="background-color:#ffffff; margin:auto; padding:5px; border:1px; border-style:solid; border-color:#999999; width:80%">' . format_text(unserialize($mail->message)["text"], FORMAT_MOODLE) . '</div>';
-    $mailstr .= print_textarea(0, 10, 20, unserialize($mail->message)["text"]);
+    $mailstr = '<div style="background-color:#ffffff; margin:auto; margin-bottom: 20px; padding:5px; border:1px; border-style:solid; border-color:#999999; width:80%">' . format_text(($mail->message), FORMAT_MOODLE) . '</div>';
     $customdata = $mailboxinstance->prepare_parent($mid, $gid);
 } else {
     $customdata = $mailboxinstance->prepare_parent();

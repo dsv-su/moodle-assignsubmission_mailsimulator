@@ -174,6 +174,89 @@ class mailbox {
         return $templatemail;
     }
 
+    function get_nested_reply_object($mailobj, $editbuttons=false) {
+        global $CFG, $DB;
+
+        $replies = false;
+
+        do {
+            $replies[] = $mailobj;
+        } while ($mailobj = $DB->get_record('assignsubmission_mail_mail', array('parent' => $mailobj->id, 'userid' => 0)));
+
+        if (!$replies || count($replies) <= 1) {
+            return false;
+        }
+
+        $replies = array_reverse($replies);
+        $replystr = '';
+        $divcount = 0;
+        $attachment = 0;
+
+        foreach ($replies as $m) {
+            if ($divcount == 0) {
+                $replystr .= '<div class="mailmessage">';
+                $mailobj->id = $m->id;
+                $mailobj->subject = $m->subject;
+                $mailobj->timesent = $m->timesent;
+                $mailobj->priority = $m->priority;
+                $mailobj->sender = $m->sender;
+            } else {
+                $from = $this->get_sender_string($m);
+                $replystr .= date('j F Y, H.i', $m->timesent) . ' ' . get_string('wrote', 'assignsubmission_mailsimulator', $from) . 
+                ':<br /><div style="border-left: 2px outset #000000; padding: 5px">';
+            }
+
+            //$replystr .= ( $m->attachment ? $this->get_files_str($m->id, $m->userid) : '') . format_text($m->message);
+            $replystr .= format_text(unserialize($m->message)['text']);
+
+            if ($editbuttons) {
+                $replystr .= '<span style="text-align:right">' . print_single_button($CFG->wwwroot . '/mod/assign/submission/mailsimulator/mail.php', array('id' => $this->cm->id, 'mid' => $m->id), get_string('edit'), 'get', '_self', true) . '</span>';
+            }
+            if ($m->attachment == 1) {
+                $attachment = 1;
+            }
+
+            $mailobj->attachment = $attachment;
+            $divcount++;
+        }
+        for ($i = 0; $i < count($replys); $i++) {
+            $replystr .= '</div>';
+        }
+
+        $mailobj->message = $replystr;
+        if (isset($m->pid))
+            $mailobj->pid = $m->pid;
+        if (isset($m->weight))
+            $mailobj->weight = $m->weight;
+        if (isset($m->correctiontemplate))
+            $mailobj->correctiontemplate = $m->correctiontemplate;
+        if (isset($m->randgroup))
+            $mailobj->randgroup = $m->randgroup;
+
+        return $mailobj;
+    }
+
+    function get_sender_string($mailobject, $long=false) {
+        global $USER, $DB;
+
+        if ($mailobject->sender == 0 && isset($mailobject->userid) && $mailobject->userid == 0) {
+            //$teacherid = $DB->get_field('assignment', 'var3', 'id', $this->assignment->id);
+            //$fromobj = get_record_select('user', 'id=' . $teacherid, 'firstname, lastname, email');
+        } elseif ($mailobject->sender == 0) {
+            $fromobj = $DB->get_record_select('user', 'id=: id', array("id" => $USER->id), 'firstname, lastname, email');
+        } else {
+            $fromobj = $DB->get_record('assignsubmission_mail_cntct', array('id' => $mailobject->sender));
+        }
+
+        if ($fromobj) {
+            $from = $fromobj->firstname . ' ' . $fromobj->lastname . ($long ? ' &lt;' . $fromobj->email . '&gt;' : '');
+        } else {
+            $from = $mailobject->sender;
+        }
+        
+        return $from;
+    }
+
     // Creates a new mail and returns the id or false
     function insert_mail($mail, $gid=0) {
         global $CFG, $USER, $DB;
