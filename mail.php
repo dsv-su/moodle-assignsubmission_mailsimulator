@@ -12,7 +12,7 @@ $mid = optional_param('mid', 0, PARAM_INT);
 $cm     = get_coursemodule_from_id('assign', $id, 0, false, MUST_EXIST);
 $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
 
-$context = context_course::instance($course->id);
+$context = context_module::instance($cm->id);
 
 require_login($course);
 
@@ -26,6 +26,8 @@ require_once($CFG->dirroot.'/mod/assign/submission/mailsimulator/mailbox_class.p
 $mailboxinstance = new mailbox($context, $cm, $course);
 
 $teacher = has_capability('mod/assign:grade', context_module::instance($cm->id));
+
+$mailboxinstance->print_tabs('addmail');
 
 $customdata = $mailboxinstance->prepare_mail();
 

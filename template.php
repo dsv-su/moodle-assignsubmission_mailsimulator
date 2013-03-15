@@ -11,7 +11,7 @@ $gid = optional_param('gid', 0, PARAM_INT);       // Group ID
 $cm     = get_coursemodule_from_id('assign', $id, 0, false, MUST_EXIST);
 $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
 
-$context = context_course::instance($course->id);
+$context = context_module::instance($cm->id);
 
 require_login($course);
 

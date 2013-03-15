@@ -9,6 +9,7 @@ class contacts_form extends moodleform {
         global $CFG, $DB;
  
         $id = optional_param('id', 0, PARAM_INT);
+        $cm = get_coursemodule_from_id('assign', $id, 0, false, MUST_EXIST);
 
         $mform =& $this->_form; // Don't forget the underscore! 
 
@@ -21,7 +22,7 @@ class contacts_form extends moodleform {
         $repeatarray[] = &MoodleQuickForm::createElement('text', 'lastname', get_string('lastname'));
         $repeatarray[] = &MoodleQuickForm::createElement('text', 'email', get_string('email'));
 
-        $repeatno = $DB->count_records('assignsubmission_mail_cntct', array("assignment"=>$id));
+        $repeatno = $DB->count_records('assignsubmission_mail_cntct', array("assignment"=>$cm->instance));
         $repeatno = $repeatno == 0 ? 1 : $repeatno;
         $this->repeat_elements($repeatarray, $repeatno, array(), 'option_repeats', 'option_add_contact_fields', 1, 'Add a new contact');
 

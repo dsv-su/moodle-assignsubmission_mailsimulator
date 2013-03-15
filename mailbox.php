@@ -16,7 +16,7 @@ $PAGE->set_pagelayout('standard');
 
 echo $OUTPUT->header();
 
-$context = context_course::instance($course->id);
+$context = context_module::instance($cm->id);
 
 require_capability('mod/assign:view', $context);
 

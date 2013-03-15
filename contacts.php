@@ -4,11 +4,11 @@ require_once(dirname(__FILE__).'/../../../../config.php');
 //require_once($CFG->dirroot.'/mod/assign/locallib.php');
 global $CFG, $DB, $PAGE, $COURSE;
 
-$id   = required_param('id', PARAM_INT);
+$id     = required_param('id', PARAM_INT);
 $cm     = get_coursemodule_from_id('assign', $id, 0, false, MUST_EXIST);
 $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
 
-$context = context_course::instance($course->id);
+$context = context_module::instance($cm->id);
 
 require_login($course);
 
@@ -20,6 +20,14 @@ $PAGE->set_pagelayout('standard');
 
 require($CFG->dirroot.'/mod/assign/submission/mailsimulator/mailbox_class.php');
 $mailboxinstance = new mailbox($context, $cm, $course);
+
+$mailboxinstance->print_tabs('addcontacts');
+
+if(!$DB->record_exists('assignsubmission_mail_cntct', array('assignment' => $cm->instance))) {
+    echo $OUTPUT->notification(get_string('addonecontact', 'assignsubmission_mailsimulator'));
+}
+
+echo $OUTPUT->notification(get_string('deletecontact', 'assignsubmission_mailsimulator'));
 
 require_once($CFG->dirroot.'/mod/assign/submission/mailsimulator/contacts_form.php');
 
@@ -37,7 +45,7 @@ if ($mform->is_cancelled()) {
     if ($mform->is_validated()) {
         for ($i = 0; $i < $fromform->option_repeats; $i++) {
             $contact = new stdClass;
-            $contact->assignment = $id;
+            $contact->assignment = $cm->instance;
             $contact->firstname = $fromform->firstname[$i];
             $contact->lastname = $fromform->lastname[$i];
             $contact->email = $fromform->email[$i];
@@ -50,13 +58,14 @@ if ($mform->is_cancelled()) {
                 } else {
                     $DB->update_record('assignsubmission_mail_cntct', $contact);
                 }
+
             } else {
                 if(!strlen($contact->firstname.$contact->lastname.$contact->email) == 0) {
                      $DB->insert_record('assignsubmission_mail_cntct', $contact);
                 }
             }
         }
-        //redirect($CFG->wwwroot . '/mod/assignment/view.php?id=' . $cm->id, 'Add contact', 0);
+        redirect($CFG->wwwroot . '/mod/assign/submission/mailsimulator/contacts.php?id=' . $cm->id);
     }
 
 } else {
@@ -64,7 +73,7 @@ if ($mform->is_cancelled()) {
   // or on the first display of the form.
 
     // Get criteria from database
-    if ($contactlist = $DB->get_records_list('assignsubmission_mail_cntct', 'assignment', array($id))) {
+    if ($contactlist = $DB->get_records_list('assignsubmission_mail_cntct', 'assignment', array($cm->instance))) {
         // Fill form with data
         $toform = new stdClass;
         $toform->contactid = array();
