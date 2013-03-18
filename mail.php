@@ -79,7 +79,7 @@ if ($mailform->is_cancelled()) {
           $mailboxinstance->insert_mail($fromform, $gid);
         }
 
-       // redirect($CFG->wwwroot . '/mod/assignment/view.php?id=' . $cm->id, '', 0);
+        redirect($CFG->wwwroot . '/mod/assign/submission/mailsimulator/mailbox.php?id=' . $cm->id, '', 0);
     }
 } else {
   // this branch is executed if the form is submitted but the data doesn't validate and the form should be redisplayed

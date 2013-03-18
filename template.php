@@ -63,13 +63,11 @@ if ($tform->is_cancelled()){
             $fromform->id = $fromform->templateid;
             $DB->update_record('assignsubmission_mail_tmplt', $fromform);
             $tstatus .= $fromform->id . ' UPDATED';
-            echo $tstatus;
         } else {
             $tid = $DB->insert_record('assignsubmission_mail_tmplt', $fromform);
             $tstatus .= $tid . ' ADDED';
-            echo $tstatus;
         }
-        //redirect($CFG->wwwroot . '/mod/assignment/view.php?id=' . $cm->id, $pstatus, 0);
+        redirect($CFG->wwwroot . '/mod/assign/submission/mailsimulator/mailbox.php?id=' . $cm->id, $tstatus, 0);
     }
 } else {
     $tform->set_data($toform);

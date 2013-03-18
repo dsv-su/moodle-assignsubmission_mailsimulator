@@ -32,6 +32,8 @@ class mailbox {
 
         $teacher = has_capability('mod/assign:grade', $this->context);
 
+        $this->check_assignment_setup();
+
         if ($teacher) {
             $this->print_tabs('mail');
             $this->view_assignment_mails();
@@ -46,6 +48,29 @@ class mailbox {
             echo html_writer::tag('div', html_writer::link('../../view.php?id=' . $this->cm->id, 'Back to the assignment start page'), array('align'=>'center'));
         }
 
+    }
+
+    function check_assignment_setup() {
+        global $CFG, $DB;    
+
+        // All Teacher Mail Parents must have a Parent 
+        $sql = 'SELECT id
+                FROM {assignsubmission_mail_mail}
+                WHERE assignment = ' . $this->cm->instance . '
+                AND parent = 0
+                AND userid = 0 ';
+
+        $teacherparents = $DB->get_records_sql($sql);
+
+        foreach ($teacherparents as $mailid) {
+            $id = $mailid->id;
+            $parentexists = $DB->record_exists('assignsubmission_mail_tmplt', array('mailid' => $id));
+
+            if (!$parentexists) {
+                $gid=0;
+                $this->add_parent($id);
+            }
+        }
     }
 
     function view_assignment_mails($trash=false) {
@@ -76,9 +101,7 @@ class mailbox {
                 $this->add_parent($mailobj->id, $this->calculate_group());
             }
 
-
 $editingteacher=false;
-
 
             if ($mailobj->randgroup != $group) {
                 if ($group != 0) {
@@ -86,7 +109,7 @@ $editingteacher=false;
                 }
                 echo '<div style="border:1px; border-style:solid; width:90%; margin:auto; background-color:#ffffff">';
 
-                echo '<table border="0" width="100%" style="background:gray; color:white;">';
+                echo '<table border="0" width="100%" style="background:gray; color:white; margin-bottom: 0;">';
                 echo '  <tr>';
                 echo '      <td style="padding:5px"> '.get_string('mail', 'assignsubmission_mailsimulator').' ' . $mailobj->randgroup . ' </td>';
                 echo '      <td style="padding:5px; text-align:right">';
@@ -122,13 +145,13 @@ $editingteacher=false;
 
             $p = $this->get_top_parent_id($mailobj->id);
             $from = $this->get_sender_string($mailobj, true);
-            //$firsttoname = $this->get_recipients_string($mailobj->id);
+            $firsttoname = $this->get_recipients_string($mailobj->id);
             $prio = '<span style="color:darkred">' . $this->get_prio_string($mailobj->priority) . '</span>';
 
             echo '<table class="allmailheader">';
             echo '  <tr>';
             echo '      <td style="width:100px;">' . get_string('subject', 'assignsubmission_mailsimulator') . ': </td>';
-            echo '      <td colspan="5" style="background:white;border:1px;border-style:solid"><strong>' . $prio . format_text($mailobj->subject, 1) . '</strong></td>';
+            echo '      <td colspan="5" style="background:white;border:1px;border-style:solid;border-right:0px;"><strong>' . $prio . format_text($mailobj->subject, 1) . '</strong></td>';
             echo '  </tr>';
             echo '  <tr>';
             echo '      <td>' . get_string('from') . ': </td>';
@@ -249,6 +272,69 @@ $editingteacher=false;
         }
         echo '</div>';
 
+    }
+
+    function get_user_mails($userid=null, $forgrading=false) {
+        global $CFG, $USER, $DB;
+
+        if (!$userid) {
+            $userid = $USER->id;
+        }
+
+        if ($forgrading) {
+            $sql = 'SELECT sm.id, sm.mailid, p.weight, sm.gainedweight, sm.comment, m.sender, m.subject, m.message, t.correctiontemplate, m.timesent, m.priority, m.attachment, m.userid
+                    FROM {assignsubmission_mail_sgndml} AS sm
+                    LEFT JOIN {assignsubmission_mail_tmplt} AS t ON sm.mailid = t.mailid
+                    LEFT JOIN {assignsubmission_mail_mail} AS m ON m.id = sm.mailid
+                    WHERE sm.userid = ' . $userid . '
+                    AND m.assignment = ' . $this->cm->instance;
+        } else {
+            $sql = 'SELECT signed.mailid AS id, m.userid, m.parent, m.priority, m.sender, m.subject, m.message, m.timesent, m.attachment
+                    FROM {assignsubmission_mail_sgndml} AS signed
+                    LEFT JOIN {assignsubmission_mail_mail} as m ON m.id = signed.mailid
+                    WHERE signed.userid = ' . $userid . '
+                    AND m.assignment = ' . $this->cm->instance;
+        }
+
+        return $DB->get_records_sql($sql);
+    }
+
+    // Assign mail to student the first time the student acces the assignment
+    function assign_student_mails() {
+        global $CFG, $USER, $DB;
+
+        $sql = 'SELECT m.id, t.randgroup FROM {assignsubmission_mail_mail} AS m
+                LEFT JOIN {assignsubmission_mail_tmplt} AS t ON m.id = t.mailid
+                WHERE m.assignment = ' . $this->cm->instance . '
+                AND m.userid = 0
+                AND m.parent = 0
+                AND t.deleted = 0
+                ORDER BY t.randgroup';
+
+        $assignmentmails = $DB->get_records_sql($sql);
+        $groupedtemplatesids = array();
+
+        foreach ($assignmentmails as $key => $value) {
+            $groupedtemplatesids[$value->randgroup][] = $value->id;
+        }
+
+        foreach ($groupedtemplatesids as $key => $value) {
+            $signedoutmailobj = new stdClass();
+            $signedoutmailobj->userid = $USER->id;
+            $signedoutmailobj->gainedweight = 0;
+            $signedoutmailobj->feedback = '';
+            $signedoutmailobj->status = 0;
+
+            $count = count($value) - 1;
+
+            if ($count > 0) {
+                $signedoutmailobj->mailid = $value[rand(0, $count)];
+            } else {
+                $signedoutmailobj->mailid = $value[0];
+            }
+
+            $DB->insert_record('assignsubmission_mail_sgndml', $signedoutmailobj);
+        }
     }
 
     function get_top_parent_id($mailid) {
@@ -455,7 +541,7 @@ $editingteacher=false;
 
         // If assignment parent
         if (has_capability('mod/assign:grade', context_module::instance($this->cm->id)) && !$group) {
-            //$templatemail->randgroup = $this->calculate_group();
+            $templatemail->randgroup = $this->calculate_group();
         }
 
         $templatemail->weight = 0;
@@ -548,6 +634,57 @@ $editingteacher=false;
         return $from;
     }
 
+    function get_recipients_string($mailid) {
+        global $USER, $DB;
+
+        $to_mail_arr = $DB->get_records('assignsubmission_mail_to', array('mailid' => $mailid));
+        //$teacherid = get_field('assignment', 'var3', 'id', $this->assignment->id);
+        $toarr = array();
+
+        foreach ($to_mail_arr as $value) {
+            if ($value->contactid == 0) {
+                $toarr[] = $DB->get_record_select('user', 'id=: id', array('id' => $teacherid), 'firstname, lastname, email');
+            } elseif ($value->contactid == TO_STUDENT_ID) {
+                $obj = new stdClass();
+
+                if (has_capability('mod/assign:grade', $this->context)) {
+                    $obj->firstname = 'STUDENT';
+                    $obj->lastname = 'STUDENT';
+                    $obj->email = 'STUDENT@STUDENT.COM';
+                } else {
+                    $obj->firstname = $USER->firstname;
+                    $obj->lastname = $USER->lastname;
+                    $obj->email = $USER->email;
+                }
+                $toarr[] = $obj;
+            } else {
+                $toarr[] = $DB->get_record('assignsubmission_mail_cntct', array('id' => $value->contactid));
+            }
+        }
+
+        $firsttoname = '';
+        $commacount = 0;
+        $toarrcount = count($toarr);
+
+        if ($toarr) {
+            foreach ($toarr as $con) {
+                $commacount++;
+
+                if ($con)
+                    $firsttoname .= $con->firstname . ' ' . $con->lastname . ' &lt;' . $con->email . '&gt;';
+                else
+                    $firsttoname .= 'MISSING CONTACT';
+
+                if ($commacount < $toarrcount)
+                    $firsttoname .= ', ';
+            }
+        } else {
+            $firsttoname = 'UNSPECIFIED';
+        }
+
+        return $firsttoname;
+    }
+
     // Creates a new mail and returns the id or false
     function insert_mail($mail, $gid=0) {
         global $CFG, $USER, $DB;
@@ -592,18 +729,55 @@ $editingteacher=false;
         global $CFG, $USER;
 
         $route = optional_param('route', 0, PARAM_INT);
-
-        if ($route==1) {
-            $titlestr = "Sent";
-
-        } else {
-            $titlestr = "Inbox";
-
-        }
+        $mid = optional_param('mid', 0, PARAM_INT);         // Mail id
 
         $imgurl = $CFG->wwwroot . '/mod/assign/submission/mailsimulator/pix/';
         $mailcontent = '&nbsp;';
         $mailheaders = '';
+
+        if ($route==1) {
+            $titlestr = "Sent";
+        } else {
+            if (!$templatemailarr = $this->get_user_mails()) {
+                $this->assign_student_mails();
+                redirect($CFG->wwwroot . '/mod/assign/submission/mailsimulator/mailbox.php?id=' . $this->cm->id, '', 0);    
+            }
+
+            $replyobject = false;
+            $titlestr = get_string('inbox', 'assignsubmission_mailsimulator') . ' (' . count($templatemailarr) . ' ' . get_string('mail', 'assignsubmission_mailsimulator') . ')';
+
+            foreach ($templatemailarr as $mailobj) {
+                $nested = $this->get_nested_reply_object($mailobj);
+
+                if ($nested)
+                    $replyobject[] = $nested;
+                else {
+                    $mailobj->message = '<div class="mailmessage">' . ($mailobj->attachment ? $this->get_files_str($mailobj->id, $mailobj->userid) : '') . format_text(unserialize($mailobj->message)['text'], FORMAT_MOODLE) . '</div>';
+                    $replyobject[] = $mailobj;
+                }
+            }
+
+            //$replyobject = $this->vsort($replyobject, 'timesent', false);
+            $key = null;
+
+            foreach ($replyobject as $k => $m) {
+                $link = $CFG->wwwroot . '/mod/assign/submission/mailsimulator/mailbox.php?id=' . $this->cm->id . '&mid=' . $m->id;
+                $attachment = false;
+
+                if ($m->attachment == 1) {
+                    $attachment = true;
+                }
+                $mailheaders .= $this->mail_header($m, $link, $attachment);
+
+                if ($mid == $m->id) {
+                    $key = $k;
+                }
+            }
+
+            if (isset($key)) {
+                $mailcontent = $this->mail_body($replyobject[$key]);
+            }
+        }
 
         // Mailbox printout
         ##########################
@@ -742,6 +916,126 @@ $editingteacher=false;
 
         return $topmenu;
     
+    }
+
+    function mail_header($obj, $link='#', $attachment = false) {
+        global $USER, $CFG;
+
+        $selected = optional_param('mid', 0, PARAM_INT);
+        $route = optional_param('route', 0, PARAM_INT);
+
+
+        if ($selected == $obj->id) {
+            $stylelink = 'class="mailheadertableselected"';
+            $datestyle = 'class="headerdateselected"';
+        } else {
+            $stylelink = 'class="mailheadertable" onclick="window.location.href=\'' . $link . '\';"';
+            $datestyle = 'class="headerdate"';
+        }
+
+        $from = $this->get_sender_string($obj);
+
+        if (!$route) {
+            $statusobj = $this->get_mail_status($obj->id);
+
+            if ($selected == $obj->id && $statusobj->status == 0) {
+                $statusobj->status = $this->set_mail_status($statusobj->mailid, 1);
+            }
+
+            $statusstr = $this->get_mail_status_img($statusobj->status);
+        } else {
+            $statusstr = '&nbsp;&nbsp;';
+        }
+
+        if ($attachment) {
+            $attachment = '<img src="' . $CFG->wwwroot . '/mod/assign/submission/mailsimulator/pix/attachment.png">';
+        }
+
+        $header = '<table width="100%" ' . $stylelink . ' >';
+        $header .= '    <tr>';
+        $header .= '        <td>' . $attachment . '</td>';
+        $header .= '        <td class="mailheadertd"><table width="100%"><tr><td><strong>' . $from . '</strong></td><td ' . $datestyle . '>' . date('Y-m-d', $obj->timesent) . '&nbsp;</td></tr></table></td>';
+        $header .= '    </tr><tr>';
+        $header .= '        <td class="statusimg">' . $statusstr . '</td>';
+        $header .= '        <td><strong>' . $this->get_prio_string($obj->priority) . '</strong> ' . $obj->subject . '</td>';
+        $header .= '    </tr>';
+        $header .= '</table>';
+
+        return $header;
+    }
+
+    // Get the status from user signedout mail
+    // 0 = unread, 1 = read, 2 = replied
+    function get_mail_status($mailid) {
+        global $USER, $DB;
+
+        $statusobj = new stdClass();
+
+        for (;;) {
+            $statusobj->status = $DB->get_field('assignsubmission_mail_sgndml', 'status', array('mailid' => $mailid, 'userid' => $USER->id));
+
+            if ($statusobj->status === false) {
+                $mailid = $DB->get_field('assignsubmission_mail_mail', 'parent', array('id' => $mailid));
+            } else {
+                break;
+            }
+        }
+        $statusobj->mailid = $mailid;
+
+        return $statusobj;
+    }
+
+    function get_mail_status_img($status) {
+        global $CFG;
+
+        $imgurl = '<img src="' . $CFG->wwwroot . '/mod/assign/submission/mailsimulator/pix/';
+
+        switch ($status) {
+            case 2:
+                $status = $imgurl . 'status-replied.png">';
+                break;
+
+            case 1:
+                $status = $imgurl . 'status-read.png">';
+                break;
+
+            case 0:
+            default:
+                $status = $imgurl . 'status-unread.png">';
+                break;
+        }
+        return $status;
+    }
+
+    function set_mail_status($mailid, $newstatus) {
+        global $USER, $DB;
+
+        $dataobject = new stdClass();
+        $dataobject->id = $DB->get_field('assignsubmission_mail_sgndml', 'id', array('mailid' => $mailid, 'userid' => $USER->id));
+        $dataobject->status = $newstatus;
+
+        $DB->update_record('assignsubmission_mail_sgndml', $dataobject);
+
+        return $newstatus;
+    }
+
+    function mail_body($mailobject, $sentview = false) {
+        $bodystr = '<div class="mailmessage">';
+        $bodystr .= '<strong>' . $this->get_sender_string($mailobject, true) . '</strong><br />';
+        $bodystr .= format_text($mailobject->subject, 1) . '<br />';
+        $bodystr .= date('j F Y, H.i', $mailobject->timesent) . '<br />';
+        $bodystr .= $this->get_recipients_string($mailobject->id) . '<br />';
+        $bodystr .= '<hr />';
+        $bodystr .= '</div>';
+
+        if ($sentview) {
+            $bodystr .= ( $mailobject->attachment ? $this->get_files_str($mailobject->id, $mailobject->userid) : '');
+            $bodystr .= $this->get_nested_from_child($mailobject);
+        } else {
+            $bodystr .= format_text($mailobject->message, FORMAT_MOODLE);
+        }
+
+        return $bodystr;
     }
 
 }
