@@ -551,6 +551,29 @@ $editingteacher=false;
         return $templatemail;
     }
 
+    function get_nested_from_child($mailobj) {
+        global $DB;
+        $message = '<div class="mailmessage">' . format_text(unserialize($mailobj->message), FORMAT_MOODLE);
+        $dept = 1;
+        $attachment = '';
+
+        while ($mailobj = $DB->get_record('assignsubmission_mail_mail', array('id' => $mailobj->parent))) {
+            $from = $this->get_sender_string($mailobj);
+            $date = date('j M Y, H.i', $mailobj->timesent);
+            $message .= '<br /><br/>' . $date . ' ' . get_string('wrote', 'assignsubmission_mailsimulator', $from) . ':';
+            $message .= '<div style="border-left: 2px outset #000000; padding: 5px">' . 
+                ($mailobj->attachment ? $this->get_files_str($mailobj->id, $mailobj->userid) : '') . 
+                format_text(unserialize($mailobj->message)['text'], FORMAT_MOODLE);
+            $dept++;
+        }
+
+        for ($i = 0; $i < $dept; $i++) {
+            $message .= '</div>';
+        }
+
+        return $message;
+    }
+
     function get_nested_reply_object($mailobj, $editbuttons=false) {
         global $CFG, $DB;
 
@@ -584,10 +607,12 @@ $editingteacher=false;
             }
 
             //$replystr .= ( $m->attachment ? $this->get_files_str($m->id, $m->userid) : '') . format_text($m->message);
-            $replystr .= format_text(unserialize($m->message)['text']);
+            $replystr .= format_text(unserialize($m->message)['text'], FORMAT_MOODLE);
 
             if ($editbuttons) {
-                $replystr .= '<span style="text-align:right">' . print_single_button($CFG->wwwroot . '/mod/assign/submission/mailsimulator/mail.php', array('id' => $this->cm->id, 'mid' => $m->id), get_string('edit'), 'get', '_self', true) . '</span>';
+                $replystr .= '<span style="text-align:right">' . print_single_button($CFG->wwwroot . 
+                    '/mod/assign/submission/mailsimulator/mail.php', array('id' => $this->cm->id, 'mid' => $m->id), 
+                    get_string('edit'), 'get', '_self', true) . '</span>';
             }
             if ($m->attachment == 1) {
                 $attachment = 1;
@@ -620,7 +645,7 @@ $editingteacher=false;
             //$teacherid = $DB->get_field('assignment', 'var3', 'id', $this->assignment->id);
             //$fromobj = get_record_select('user', 'id=' . $teacherid, 'firstname, lastname, email');
         } elseif ($mailobject->sender == 0) {
-            $fromobj = $DB->get_record_select('user', 'id=: id', array("id" => $USER->id), 'firstname, lastname, email');
+            $fromobj = $DB->get_record('user', array("id" => $USER->id), 'firstname, lastname, email');
         } else {
             $fromobj = $DB->get_record('assignsubmission_mail_cntct', array('id' => $mailobject->sender));
         }
@@ -736,7 +761,30 @@ $editingteacher=false;
         $mailheaders = '';
 
         if ($route==1) {
-            $titlestr = "Sent";
+            $sentarr = $this->get_user_sent();
+            $titlestr = get_string('sent', 'assignsubmission_mailsimulator') . ' (' . count($sentarr) . ' ' 
+                . get_string('mail', 'assignsubmission_mailsimulator') . ')';
+
+            if ($sentarr) {
+                $mailcount = count($sentarr);
+
+                foreach ($sentarr as $k => $sentmail) {
+                    $link = $CFG->pagepath . '?id=' . $this->cm->id . '&mid=' . $sentmail->id . '&route=' . $route;
+                    $attachment = false;
+
+                    if ($sentmail->attachment == 1) {
+                        $attachment = true;
+                    }
+                    $mailheaders .= $this->mail_header($sentmail, $link, $attachment);
+
+                    if ($mid == $sentmail->id) {
+                        $key = $k;
+                    }
+                }
+                if (isset($key)) {
+                    $mailcontent = $this->mail_body($sentarr[$key], true);
+                }
+            }
         } else {
             if (!$templatemailarr = $this->get_user_mails()) {
                 $this->assign_student_mails();
@@ -744,7 +792,8 @@ $editingteacher=false;
             }
 
             $replyobject = false;
-            $titlestr = get_string('inbox', 'assignsubmission_mailsimulator') . ' (' . count($templatemailarr) . ' ' . get_string('mail', 'assignsubmission_mailsimulator') . ')';
+            $titlestr = get_string('inbox', 'assignsubmission_mailsimulator') . ' (' . count($templatemailarr) . ' ' 
+                . get_string('mail', 'assignsubmission_mailsimulator') . ')';
 
             foreach ($templatemailarr as $mailobj) {
                 $nested = $this->get_nested_reply_object($mailobj);
@@ -752,7 +801,8 @@ $editingteacher=false;
                 if ($nested)
                     $replyobject[] = $nested;
                 else {
-                    $mailobj->message = '<div class="mailmessage">' . ($mailobj->attachment ? $this->get_files_str($mailobj->id, $mailobj->userid) : '') . format_text(unserialize($mailobj->message)['text'], FORMAT_MOODLE) . '</div>';
+                    $mailobj->message = '<div class="mailmessage">' . ($mailobj->attachment ? $this->get_files_str($mailobj->id, 
+                        $mailobj->userid) : '') . format_text(unserialize($mailobj->message)['text'], FORMAT_MOODLE) . '</div>';
                     $replyobject[] = $mailobj;
                 }
             }
@@ -844,8 +894,12 @@ $editingteacher=false;
         $imgurl = $CFG->wwwroot . '/mod/assign/submission/mailsimulator/pix/';
 
         $sidebarstr = '<div class="mailboxheader">' . get_string('mailboxes', 'assignsubmission_mailsimulator') . '</div>';
-        $sidebarstr .= '<div class="' . ($route == 0 ? 'mailboxselect' : 'mailbox') . '"><img src="' . $imgurl . 'inbox.png"><a href="' . $CFG->wwwroot . '/mod/assign/submission/mailsimulator/mailbox.php?id='.$this->cm->id.'&route=0">' . get_string('inbox', 'assignsubmission_mailsimulator') . '</a></div>';
-        $sidebarstr .= '<div class="' . ($route == 1 ? 'mailboxselect' : 'mailbox') . '"><img src="' . $imgurl . 'sent.png"><a href="' . $CFG->wwwroot . '/mod/assign/submission/mailsimulator/mailbox.php?id='.$this->cm->id.'&route=1">' . get_string('sent', 'assignsubmission_mailsimulator') . '</a></div>';
+        $sidebarstr .= '<div class="' . ($route == 0 ? 'mailboxselect' : 'mailbox') . '"><img src="' . $imgurl . 
+        'inbox.png"><a href="' . $CFG->wwwroot . '/mod/assign/submission/mailsimulator/mailbox.php?id='.
+        $this->cm->id.'&route=0">' . get_string('inbox', 'assignsubmission_mailsimulator') . '</a></div>';
+        $sidebarstr .= '<div class="' . ($route == 1 ? 'mailboxselect' : 'mailbox') . '"><img src="' . 
+        $imgurl . 'sent.png"><a href="' . $CFG->wwwroot . '/mod/assign/submission/mailsimulator/mailbox.php?id='.
+        $this->cm->id.'&route=1">' . get_string('sent', 'assignsubmission_mailsimulator') . '</a></div>';
 
         return $sidebarstr;
     }
@@ -855,7 +909,7 @@ $editingteacher=false;
 
         //$submission = $this->get_submission();
         $mid = optional_param('mid', 0, PARAM_INT);       // Mail id
-        //$link = $CFG->wwwroot . '/mod/assignment/view.php?id=' . $this->cm->id . '&add=1&re=';
+        $link = $CFG->wwwroot . '/mod/assign/submission/mailsimulator/mail.php?id=' . $this->cm->id . '&add=1&re=';
         $imgurl = $CFG->wwwroot . '/mod/assign/submission/mailsimulator/pix/';
 
         if ($mid) {
@@ -864,23 +918,23 @@ $editingteacher=false;
                                 <tr>
                                     <td width="92"></td>
                                     <td >
-                                        <a href="' . $link . '1&pid=' . $mid . '" title="' . get_string('reply', 'assignment_mailsimulator') . '" onmouseover="document.re.src=\'' . $imgurl . 'button-reply-down.png\'" onmouseout="document.re.src=\'' . $imgurl . 'button-reply.png\'">
+                                        <a href="' . $link . '1&tid=' . $mid . '" title="' . get_string('reply', 'assignment_mailsimulator') . '" onmouseover="document.re.src=\'' . $imgurl . 'button-reply-down.png\'" onmouseout="document.re.src=\'' . $imgurl . 'button-reply.png\'">
                                             <img name="re" src="' . $imgurl . 'button-reply.png">
                     </a>
                                     </td>
                                     <td >
-                                        <a href="' . $link . '2&pid=' . $mid . '" title="' . get_string('replyall', 'assignment_mailsimulator') . '" onmouseover="document.all.src=\'' . $imgurl . 'button-replyall-down.png\'" onmouseout="document.all.src=\'' . $imgurl . 'button-replyall.png\'">
+                                        <a href="' . $link . '2&tid=' . $mid . '" title="' . get_string('replyall', 'assignment_mailsimulator') . '" onmouseover="document.all.src=\'' . $imgurl . 'button-replyall-down.png\'" onmouseout="document.all.src=\'' . $imgurl . 'button-replyall.png\'">
                                             <img name="all" src="' . $imgurl . 'button-replyall.png">
                                         </a>
                                     </td>
                                     <td >
-                                        <a href="' . $link . '3&pid=' . $mid . '" title="' . get_string('forward', 'assignment_mailsimulator') . '" onmouseover="document.fwd.src=\'' . $imgurl . 'button-forward-down.png\'" onmouseout="document.fwd.src=\'' . $imgurl . 'button-forward.png\'">
+                                        <a href="' . $link . '3&tid=' . $mid . '" title="' . get_string('forward', 'assignment_mailsimulator') . '" onmouseover="document.fwd.src=\'' . $imgurl . 'button-forward-down.png\'" onmouseout="document.fwd.src=\'' . $imgurl . 'button-forward.png\'">
                                             <img name="fwd" src="' . $imgurl . 'button-forward.png">
                                         </a>
                                     </td>
                                     <td width="10">&nbsp;</td>
                                     <td >
-                                        <a href="' . $link . '0&pid=0" title="' . get_string('newmail', 'assignment_mailsimulator') . '" onmouseover="document.newmail.src=\'' . $imgurl . 'button-newmail-down.png\'" onmouseout="document.newmail.src=\'' . $imgurl . 'button-newmail.png\'">
+                                        <a href="' . $link . '0&tid=0" title="' . get_string('newmail', 'assignment_mailsimulator') . '" onmouseover="document.newmail.src=\'' . $imgurl . 'button-newmail-down.png\'" onmouseout="document.newmail.src=\'' . $imgurl . 'button-newmail.png\'">
                                             <img name="newmail" src="' . $imgurl . 'button-newmail.png">
                                         </a>
                                     </td>
@@ -923,7 +977,6 @@ $editingteacher=false;
 
         $selected = optional_param('mid', 0, PARAM_INT);
         $route = optional_param('route', 0, PARAM_INT);
-
 
         if ($selected == $obj->id) {
             $stylelink = 'class="mailheadertableselected"';
@@ -985,6 +1038,12 @@ $editingteacher=false;
         return $statusobj;
     }
 
+    function get_signed_out_status($mailid) {
+        global $DB;
+
+        return $DB->record_exists('assignsubmission_mail_sgndml', array('mailid' => $mailid));
+    }
+
     function get_mail_status_img($status) {
         global $CFG;
 
@@ -1036,6 +1095,41 @@ $editingteacher=false;
         }
 
         return $bodystr;
+    }
+
+    function get_user_sent($userid=null) {
+        global $USER, $DB;
+
+        if (!$userid) {
+            $userid = $USER->id;
+        }
+
+        $select = 'userid = ' . $userid . ' AND assignment = ' . $this->assignment->id;
+        return $DB->get_records('assignsubmission_mail_mail', array("userid" => $userid, "assignment" => $this->cm->instance), 'timesent DESC');
+    }
+
+    function update_mail($mail) {
+        global $DB;
+
+        $DB->delete_records('assignsubmission_mail_to', array('mailid' => $mail->mailid));
+
+        foreach ($mail->to as $to) {
+            $obj = new stdClass();
+            $obj->contactid = $to;
+            $obj->mailid = $mail->mailid;
+
+            $DB->insert_record('assignsubmission_mail_to', $obj);
+        }
+
+        $mail->id = $mail->mailid;
+        unset($mail->mailid);
+        unset($mail->MAX_FILE_SIZE);
+
+        //if ($this->upload_attachment($mail->id, $mail->userid)) {
+        //    $mail->attachment = 1;
+        //}
+
+        $DB->update_record('assignsubmission_mail_mail', $mail);
     }
 
 }

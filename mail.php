@@ -4,7 +4,7 @@ require_once(dirname(__FILE__).'/../../../../config.php');
 global $CFG, $DB, $PAGE, $COURSE;
 
 $id   = required_param('id', PARAM_INT);
-$pid = optional_param('pid', 0, PARAM_INT);       // Parent ID
+$tid = optional_param('tid', 0, PARAM_INT);       // Template ID
 $gid = optional_param('gid', 0, PARAM_INT);       // Group ID
 $re = optional_param('re', 0, PARAM_INT);         // Reply 1=one, 2=all
 $mid = optional_param('mid', 0, PARAM_INT);
@@ -16,23 +16,87 @@ $context = context_module::instance($cm->id);
 
 require_login($course);
 
-echo $OUTPUT->header();
-
 //$PAGE->set_url('/mod/assign/submission/mailsimulator/mail.php');
-//$PAGE->set_title('New Mail');
+$PAGE->set_title('New Mail');
 //$PAGE->set_pagelayout('standard');
 
 require_once($CFG->dirroot.'/mod/assign/submission/mailsimulator/mailbox_class.php');
 $mailboxinstance = new mailbox($context, $cm, $course);
 
+echo $OUTPUT->header();
+
 $teacher = has_capability('mod/assign:grade', context_module::instance($cm->id));
 
 $mailboxinstance->print_tabs('addmail');
 
-$customdata = $mailboxinstance->prepare_mail();
+if ($mid) {
+    if (!$teacher) {echo 'Go away!';}
+    
+    $customdata = $DB->get_record('assignsubmission_mail_mail', array('id' => $mid));
+    if (!$customdata) {
+        //error("Mail ID was incorrect", $CFG->wwwroot . '/mod/assignment/view.php?id=' . $cm->id);
+    }
+    if (!$customdata->userid == 0) { // Only edit teacher mail
+        //error("You are not allowed to edit this mail.", $CFG->wwwroot . '/mod/assignment/view.php?id=' . $cm->id);
+    }
+
+    //$teacherid = $DB->get_field('assignment', 'var3', 'id', $assignmentinstance->assignment->id);
+    $contacts = $DB->get_records('assignsubmission_mail_cntct', array('assignment' => $cm->instance));
+    $senttoobjarr = $DB->get_records('assignsubmission_mail_to', array('mailid' => $mid), 'contactid');
+    $sendtoarr = array();
+
+    foreach ($senttoobjarr as $key => $value) {
+        $sendtoarr[$value->contactid] = $value->contactid;
+    }
+
+    //$teacherobj = $DB->get_record('user', array('id' => $teacherid), 'firstname, lastname, email');
+
+    if ($contacts) {
+        foreach ($contacts as $key => $con) {
+            $contacts[$key] = $con->firstname . ' ' . $con->lastname . ' &lt;' . $con->email . '&gt;';
+        }
+    }
+
+    //$contacts[0] = $teacherobj->firstname . ' ' . $teacherobj->lastname . ' &lt;' . $teacherobj->email . '&gt;';
+    $contacts[TO_STUDENT_ID] = get_string('mailtostudent', 'assignsubmission_mailsimulator');
+    asort($contacts);
+
+    $customdata->message = unserialize($customdata->message);
+    $customdata->to = $contacts;
+    $customdata->sentto = $sendtoarr;
+    $customdata->mailid = $customdata->id;
+    $customdata->teacher = true;
+
+    $top = $mailboxinstance->get_top_parent_id($mid);
+    $inactive = !$mailboxinstance->get_signed_out_status($top);
+
+    $customdata->inactive = $inactive;
+    unset($customdata->id);
+} else {
+    $customdata = $mailboxinstance->prepare_mail($tid);  
+} 
+
+//$customdata = $mailboxinstance->prepare_mail();
 
 $titlestr = get_string('newmail', 'assignsubmission_mailsimulator');
 $mailstr = '';
+
+if ($tid) { // If a student replies to or forward a mail
+
+    if (!$mailobj = $DB->get_record('assignsubmission_mail_mail', array('id' => $tid))) {
+        //error("Mail ID is incorrect");
+    }
+    $message = $mailboxinstance->get_nested_from_child($mailobj);
+    $mailstr = '<div style="background-color:#ffffff; margin:10px; padding:5px; border:1px; border-style:solid; border-color:#999999;">' . $message . '</div>';
+
+    if ($re == 3) {
+        $customdata->subject = get_string('fwd', 'assignsubmission_mailsimulator') . $mailobj->subject;
+        $titlestr = get_string('fwd', 'assignsubmission_mailsimulator') . ' ' . $mailobj->subject;
+    } else {
+        $customdata->subject = get_string('re', 'assignsubmission_mailsimulator') . $mailobj->subject;
+        $titlestr = get_string('re', 'assignsubmission_mailsimulator') . ' ' . $mailobj->subject;
+    }
+}
 
 $imgurl = $CFG->wwwroot . '/mod/assign/submission/mailsimulator/pix/';
 
@@ -74,7 +138,7 @@ if ($mailform->is_cancelled()) {
   //In this case you process validated data. $mform->get_data() returns data posted in form.
     if ($mailform->is_validated()) {
         if ($DB->record_exists('assignsubmission_mail_mail', array('id' => $fromform->mailid))) {
-           // $assignmentinstance->update_mail($fromform);
+          $mailboxinstance->update_mail($fromform);
         } else {
           $mailboxinstance->insert_mail($fromform, $gid);
         }

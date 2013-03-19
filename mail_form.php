@@ -37,6 +37,41 @@ class mail_form extends moodleform {
         // Student Reply mail
         if ($this->_customdata->parent != 0 && !$this->_customdata->teacher) {
 
+            $replyobj = $DB->get_record('assignsubmission_mail_mail', array('id' => $this->_customdata->parent));
+
+            // Reply To All --------- or forward
+            if ($this->_customdata->reply > 1) {
+                $toarr = $DB->get_records('assignsubmission_mail_to', array('mailid' => $this->_customdata->parent));
+                foreach ($toarr as $value) {
+                    $replyto[$value->contactid] = $value->contactid;
+                }
+            }
+var_dump($replyobj);
+            // Reply To Sender
+            if ($replyobj->userid != 0) {
+                $replyto[TO_STUDENT_ID] = TO_STUDENT_ID;
+            } else {
+                $replyto[$replyobj->sender] = $replyobj->sender;
+            }
+            # -------------
+
+            if ($this->_customdata->reply <= 2) {
+                $select = $mform->addElement('select', 'to', get_string('to'), array());
+
+                if ($this->_customdata->reply == 2)
+                    $select->setMultiple(true);
+
+                foreach ($to as $key => $value) {
+
+                    if (key_exists($key, $replyto)) {
+                        $select->addOption($value, $key, array('selected' => 'selected'));
+                    }
+                }
+            } elseif ($this->_customdata->reply == 3) {
+                $select = $mform->addElement('select', 'to', get_string('to'), $to);
+                $select->setMultiple(true);
+            }
+
         // Teacher New mail
         } else {
             if ($this->_customdata->reply) {
@@ -93,7 +128,8 @@ class mail_form extends moodleform {
         $mform->setType('subject', PARAM_TEXT);
         $mform->setDefault('subject', $this->_customdata->subject);
 
-        if ($this->_customdata->teacher) {
+        //Why should we use TextArea for students mails?
+        if ($this->_customdata->teacher && $this->_customdata->userid==0) {
             $mform->addElement('editor', 'message', get_string('message', 'assignsubmission_mailsimulator'), array('cols' => 83, 'rows' => 20));
             $mform->setType('message', PARAM_RAW); // to be cleaned before display
             //$mform->setHelpButton('message', array('reading', 'writing', 'richtext'), false, 'editorhelpbutton');
@@ -103,8 +139,9 @@ class mail_form extends moodleform {
         }
 
         $mform->setDefault('message', $this->_customdata->message);
+        var_dump($this->_customdata->teacher);
 
-        // here upload of the files should go
+        // here upload of the files should go!
 
         $this->add_action_buttons(true, 'Submit');
     }
