@@ -1,6 +1,8 @@
 <?php
 
 require_once(dirname(__FILE__).'/../../../../config.php');
+require_once($CFG->libdir.'/filelib.php');
+
 global $CFG, $DB, $PAGE, $COURSE;
 
 $id   = required_param('id', PARAM_INT);
@@ -128,13 +130,35 @@ require_once($CFG->dirroot.'/mod/assign/submission/mailsimulator/mail_form.php')
 //Instantiate simplehtml_form 
 $mailform = new mail_form('?gid=' . $gid, $customdata);
 
+//var_dump($customdata);break;
+
+$maxbytes = 300000000;
+
+if ($customdata->attachment<>0) {
+    $draftitemid = $customdata->attachment;    
+} else {
+    $draftitemid = file_get_submitted_draft_itemid('attachment');
+    file_prepare_draft_area($draftitemid, $context->id, 'assignsubmission_mailsimulator', 'attachment', empty($fromform->id)?null:$customdata->id, array('subdirs' => 0, 'maxbytes' => $maxbytes, 'maxfiles' => 5, 'accepted_types' => '*' ));
+}
+
+//var_dump($draftitemid);
+//var_dump($context);
 //Form processing and displaying is done here
 if ($mailform->is_cancelled()) {
   var_dump('Cancel');
     //Handle form cancel operation, if cancel button is present on form
 } else if ($fromform = $mailform->get_data()) {
-  $fromform->message=serialize($fromform->message);
-  $fromform->attachment=0;
+    if (!$teacher) { // We need to simulate the same structure as it would be a teacher's mail
+        $objmessage  = array();
+        $objmessage['text'] = $fromform->message;
+        $fromform->message = $objmessage;
+    }
+
+    //var_dump($fromform);break;
+    $fromform->message=serialize($fromform->message);
+    file_save_draft_area_files($fromform->attachment, $context->id, 'assignsubmission_mailsimulator', 'attachment',
+                   $fromform->mailid, array('subdirs' => 0, 'maxbytes' => $maxbytes, 'maxfiles' => 5));
+    //$fromform->attachment=0;
   //In this case you process validated data. $mform->get_data() returns data posted in form.
     if ($mailform->is_validated()) {
         if ($DB->record_exists('assignsubmission_mail_mail', array('id' => $fromform->mailid))) {
@@ -150,6 +174,7 @@ if ($mailform->is_cancelled()) {
   // or on the first display of the form.
   //Set default data (if any)
     $mailform->set_data($toform);
+    $mailform->set_data(array('attachment'=>$draftitemid));
   //displays the form
     $mailform->display();
 }

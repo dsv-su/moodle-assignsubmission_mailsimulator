@@ -1,6 +1,7 @@
 <?php
 
 require_once($CFG->libdir . '/formslib.php');
+require_once($CFG->libdir . '/filelib.php');
 
 class mail_form extends moodleform {
  
@@ -46,7 +47,7 @@ class mail_form extends moodleform {
                     $replyto[$value->contactid] = $value->contactid;
                 }
             }
-var_dump($replyobj);
+
             // Reply To Sender
             if ($replyobj->userid != 0) {
                 $replyto[TO_STUDENT_ID] = TO_STUDENT_ID;
@@ -75,6 +76,33 @@ var_dump($replyobj);
         // Teacher New mail
         } else {
             if ($this->_customdata->reply) {
+
+                $replyobj = $DB->get_record('assignsubmission_mail_mail', array('id' => $this->_customdata->parent));
+
+                if ($this->_customdata->reply == 2) {
+                    $toarr = $DB->get_records('assignsubmission_mail_to', array('mailid' => $this->_customdata->parent));
+                    foreach ($toarr as $value) {
+                        $replyto[$value->contactid] = $value->contactid;
+                    }
+                }
+
+                // Reply To Sender
+                if ($replyobj->userid != 0) {
+                    $replyto[TO_STUDENT_ID] = TO_STUDENT_ID;
+                } else {
+                    $replyto[$replyobj->sender] = $replyobj->sender;
+                }
+
+                $select = $mform->addElement('select', 'to', get_string('to'), array());
+                $select->setMultiple(true);
+
+                foreach ($to as $key => $value) {
+                    if (key_exists($key, $replyto)) {
+                        $select->addOption($value, $key, array('selected' => 'selected'));
+                    } else {
+                        $select->addOption($value, $key);
+                    }
+                }
 
             } else {
                 if (isset($this->_customdata->sentto)) {
@@ -129,7 +157,7 @@ var_dump($replyobj);
         $mform->setDefault('subject', $this->_customdata->subject);
 
         //Why should we use TextArea for students mails?
-        if ($this->_customdata->teacher && $this->_customdata->userid==0) {
+        if ($this->_customdata->teacher /*&& $this->_customdata->userid==0*/) {
             $mform->addElement('editor', 'message', get_string('message', 'assignsubmission_mailsimulator'), array('cols' => 83, 'rows' => 20));
             $mform->setType('message', PARAM_RAW); // to be cleaned before display
             //$mform->setHelpButton('message', array('reading', 'writing', 'richtext'), false, 'editorhelpbutton');
@@ -139,9 +167,13 @@ var_dump($replyobj);
         }
 
         $mform->setDefault('message', $this->_customdata->message);
-        var_dump($this->_customdata->teacher);
 
         // here upload of the files should go!
+       // if (((!isset($this->_customdata->inactive) || $this->_customdata->inactive) && $this->_customdata->file_types_str)) {
+            $maxbytes = 300000000;
+            $mform->addElement('filemanager', 'attachment', get_string('attachment', 'forum'), null,
+                array('subdirs' => 0, 'maxbytes' => $maxbytes, 'maxfiles' => 5, 'accepted_types' => '*' ));
+       // }
 
         $this->add_action_buttons(true, 'Submit');
     }

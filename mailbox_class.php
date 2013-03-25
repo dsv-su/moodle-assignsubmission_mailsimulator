@@ -2,6 +2,8 @@
 
 require_once(dirname(__FILE__).'/../../../../config.php');
 require_once($CFG->dirroot.'/mod/assign/locallib.php');
+require_once($CFG->libdir.'/filelib.php');
+require_once($CFG->libdir . '/portfolio/caller.php');
 
 DEFINE('TO_STUDENT_ID', 9999999); // To identify when a mail is sent to a student
 
@@ -29,14 +31,30 @@ class mailbox {
         global $OUTPUT, $USER, $DB;
 
         $existingsubmission = $this->user_have_registered_submission($USER->id, $this->cm->instance);
-
+        $route = optional_param('route', 0, PARAM_INT);
+        $delete = optional_param('delete', 0, PARAM_INT);
+        $mid = optional_param('mid', 0, PARAM_INT);
+        $pid = optional_param('pid', 0, PARAM_INT);
         $teacher = has_capability('mod/assign:grade', $this->context);
-
         $this->check_assignment_setup();
 
         if ($teacher) {
-            $this->print_tabs('mail');
-            $this->view_assignment_mails();
+            if ($delete == 1) {
+                $this->delete_mail_and_children($mid);
+            } elseif ($delete == 2) {
+                $this->handle_trash($mid);
+            } elseif ($delete == 3) {
+                $this->handle_trash($mid, false);
+                $route = 3;
+            }
+
+            if ($route==3) {
+                $this->print_tabs('trashmail');
+                $this->view_assignment_mails(true);
+            } else {
+                $this->print_tabs('mail');
+                $this->view_assignment_mails();
+            }
         } else {
             if ($existingsubmission->status<>'submitted') {
                 $this->view_mailbox();
@@ -73,8 +91,61 @@ class mailbox {
         }
     }
 
+    function get_files_str($mid, $userid) {
+        global $DB, $USER;
+        $fs = get_file_storage();
+        //$attachment += 0;
+        $files = $fs->get_area_files($this->context->id, 'assignsubmission_mailsimulator', 'attachment');
+
+        $attachments = array();
+        foreach ($files as $file) {
+            if ($file->is_directory()) {
+                continue;
+            }
+            $attach = new stdClass();
+            $attach->file = $file;
+            $attach->filename = $file->get_filename();
+            $attach->url = file_encode_url($CFG->wwwroot.'/pluginfile.php', '/'.$this->context->id.'/assignsubmission_mailsimulator/attachment/'. $mid .'/'.$attach->filename);
+            $attachments[] = $attach;
+        }
+        //var_dump($attachments);
+        return $attachments;
+
+/*
+        $this->modcontext = context_module::instance($this->cm->id);
+        $fs = get_file_storage();
+        if ($this->post) {
+            if ($this->attachment) {
+                $this->set_file_and_format_data($this->attachment);
+            } else {
+                $attach = $fs->get_area_files($this->modcontext->id, 'mod_forum', 'attachment', $this->post->id, 'timemodified', false);
+                $embed  = $fs->get_area_files($this->modcontext->id, 'mod_forum', 'post', $this->post->id, 'timemodified', false);
+                $files = array_merge($attach, $embed);
+                $this->set_file_and_format_data($files);
+            }
+            if (!empty($this->multifiles)) {
+                $this->keyedfiles[$this->post->id] = $this->multifiles;
+            } else if (!empty($this->singlefile)) {
+                $this->keyedfiles[$this->post->id] = array($this->singlefile);
+            }
+*/
+/*
+        if (empty($this->multifiles) && !empty($this->singlefile)) {
+            $this->multifiles = array($this->singlefile); // copy_files workaround
+        }
+        // depending on whether there are files or not, we might have to change richhtml/plainhtml
+        if (empty($this->attachment)) {
+            if (!empty($this->multifiles)) {
+                $this->add_format(PORTFOLIO_FORMAT_RICHHTML);
+            } else {
+                $this->add_format(PORTFOLIO_FORMAT_PLAINHTML);
+            }
+        }
+*/
+    }
+
     function view_assignment_mails($trash=false) {
-        global $DB;
+        global $DB, $OUTPUT, $CFG;
 
         $deletestatus = ($trash ? 1 : 0);
 
@@ -101,7 +172,7 @@ class mailbox {
                 $this->add_parent($mailobj->id, $this->calculate_group());
             }
 
-$editingteacher=false;
+        $editingteacher = has_capability('mod/assign:grade', $this->context);
 
             if ($mailobj->randgroup != $group) {
                 if ($group != 0) {
@@ -113,16 +184,18 @@ $editingteacher=false;
                 echo '  <tr>';
                 echo '      <td style="padding:5px"> '.get_string('mail', 'assignsubmission_mailsimulator').' ' . $mailobj->randgroup . ' </td>';
                 echo '      <td style="padding:5px; text-align:right">';
-                echo '          <table align="right">';
+                echo '          <table align="right" style="margin-bottom:0;">';
                 echo '              <tr>';
                 echo '                  <td style="padding:0; margin:0;">';
                 if($editingteacher) {
-                    print_single_button($CFG->pagepath, array('id' => $this->cm->id, 'add' => 1, 'pid' => 0, 'gid' => $mailobj->randgroup), get_string('addmailalt', 'assignsubmission_mailsimulator'));
+                    print_single_button($CFG->wwwroot . '/mod/assign/submission/mailsimulator/mail.php', 
+                        array('id' => $this->cm->id, 'tid' => 0, 'gid' => $mailobj->randgroup), 
+                        get_string('addalternativemail', 'assignsubmission_mailsimulator'));
                 }
                 echo '                  </td>';
                 echo '                  <td style="padding:0; margin:0;">';
                 if($editingteacher) {
-                    helpbutton('addalternativemail', get_string('addmailalt', 'assignment_mailsimulator'), 'assignment/type/mailsimulator/');
+                    echo $OUTPUT->help_icon('addalternativemail', 'assignsubmission_mailsimulator');
                 }
                 echo '                  </td>';
                 echo '              </tr>';
@@ -137,9 +210,18 @@ $editingteacher=false;
             if ($replyobject) {
                 $mailobj = $replyobject;
             } else {
-                $mailobj->message = '<div class="mailmessage">' . ($mailobj->attachment ? $this->get_files_str($mailobj->id, 0) : '') . format_text(unserialize($mailobj->message)["text"], FORMAT_MOODLE) . '</div>';
+                $mailobj->message = '<div class="mailmessage">' . format_text(unserialize($mailobj->message)["text"], FORMAT_MOODLE) . '</div>';
+                
+                var_dump($mailobj);
+                $attachments = $mailobj->attachment>0 ? $this->get_files_str($mailobj->id, 0) : '';
+                foreach ($attachments as $attachment) {
+                    $mailobj->message .=  '<a href=' . $CFG->wwwroot . $attachment->url . '>'. $CFG->wwwroot . $attachment->url .'</a><br/>';
+                }
+
                 if($editingteacher) {
-                    $mailobj->message .= '<span style="text-align:right">' . print_single_button($CFG->wwwroot . '/mod/assignment/type/mailsimulator/mail.php', array('id' => $this->cm->id, 'mid' => $mailobj->id), get_string('edit'), 'get', '_self', true) . '</span>';
+                    $mailobj->message .= '<span style="text-align:right">' . print_single_button($CFG->wwwroot . 
+                        '/mod/assign/submission/mailsimulator/mail.php', array('id' => $this->cm->id, 'mid' => $mailobj->id), 
+                        get_string('edit'), 'get', '_self', true) . '</span>';
                 }
             }
 
@@ -171,28 +253,12 @@ $editingteacher=false;
             echo '              <tr>';
             echo '                  <td style="padding:0; margin:0;">';
             if($editingteacher) {
-                print_single_button($CFG->pagepath, array('id' => $this->cm->id, 'add' => 1, 're' => 1, 'pid' => $mailobj->id), get_string('reply', 'assignment_mailsimulator'));
+                print_single_button($CFG->wwwroot . '/mod/assign/submission/mailsimulator/mail.php', array('id' => $this->cm->id, 're' => 1, 'tid' => $mailobj->id), get_string('reply', 'assignsubmission_mailsimulator'));
             }
             echo '                  </td>';
             echo '                  <td style="padding:0; margin:0;">';
             if($editingteacher) {
-                helpbutton('reply', get_string('reply', 'assignment_mailsimulator'), 'assignment/type/mailsimulator/');
-            }
-            echo '                  </td>';
-            echo '              </tr>';
-            echo '          </table>';
-            echo '      </td>';
-            echo '      <td style="width:100px">';
-            echo '          <table>';
-            echo '              <tr>';
-            echo '                  <td style="padding:0; margin:0;">';
-            if($editingteacher) {
-                print_single_button($CFG->pagepath, array('id' => $this->cm->id, 'add' => 1, 're' => 2, 'pid' => $mailobj->id), get_string('replyall', 'assignment_mailsimulator'));
-            }
-            echo '                  </td>';
-            echo '                  <td style="padding:0; margin:0;">';
-            if($editingteacher) {
-                helpbutton('reply', get_string('reply', 'assignment_mailsimulator'), 'assignment/type/mailsimulator/');
+                echo $OUTPUT->help_icon('reply', 'assignsubmission_mailsimulator');
             }
             echo '                  </td>';
             echo '              </tr>';
@@ -203,11 +269,13 @@ $editingteacher=false;
             echo '              <tr>';
             echo '                  <td style="padding:0; margin:0;">';
             if($editingteacher) {
-                print_single_button($CFG->wwwroot . '/mod/assignment/type/mailsimulator/parent.php', array('id' => $this->cm->id, 'mid' => $p, 'gid' => $mailobj->randgroup), get_string('updatecorrectiontemplate', 'assignment_mailsimulator'));
+                print_single_button($CFG->wwwroot . '/mod/assign/submission/mailsimulator/mail.php', array('id' => $this->cm->id, 're' => 2, 'tid' => $mailobj->id), get_string('replyall', 'assignsubmission_mailsimulator'));
             }
             echo '                  </td>';
             echo '                  <td style="padding:0; margin:0;">';
-           # helpbutton('updatecorrectiontemplate', get_string('updatecorrectiontemplate', 'assignment_mailsimulator'), 'assignment/type/mailsimulator/');
+            if($editingteacher) {
+                echo $OUTPUT->help_icon('replyall', 'assignsubmission_mailsimulator');
+            }
             echo '                  </td>';
             echo '              </tr>';
             echo '          </table>';
@@ -217,12 +285,26 @@ $editingteacher=false;
             echo '              <tr>';
             echo '                  <td style="padding:0; margin:0;">';
             if($editingteacher) {
-                print_single_button($CFG->wwwroot . '/mod/assignment/view.php', array('id' => $this->cm->id, 'mid' => $pid, 'delete' => 1), get_string('delete'), 'get', '_self', false, '', $this->get_signed_out_status($pid), get_string('confirmdelete', 'assignment_mailsimulator'));
+                print_single_button($CFG->wwwroot . '/mod/assign/submission/mailsimulator/template.php', array('id' => $this->cm->id, 'mid' => $p, 'gid' => $mailobj->randgroup), get_string('updatecorrectiontemplate', 'assignsubmission_mailsimulator'));
+            }
+            echo '                  </td>';
+            echo '                  <td style="padding:0; margin:0;">';
+            echo $OUTPUT->help_icon('updatecorrectiontemplate', 'assignsubmission_mailsimulator');
+            echo '                  </td>';
+            echo '              </tr>';
+            echo '          </table>';
+            echo '      </td>';
+            echo '      <td style="width:100px">';
+            echo '          <table>';
+            echo '              <tr>';
+            echo '                  <td style="padding:0; margin:0;">';
+            if($editingteacher) {
+                //print_single_button($CFG->wwwroot . '/mod/assign/submission/mailsimulator/mailbox.php', array('id' => $this->cm->id, 'mid' => $tid, 'delete' => 1), get_string('delete'), 'get', '_self', false, '', $this->get_signed_out_status($tid), get_string('confirmdelete', 'assignsubmission_mailsimulator'));
             }
             echo '                  </td>';
             echo '                  <td style="padding:0; margin:0;">';
             if($editingteacher) {
-                helpbutton('delete', get_string('delete'), 'assignment/type/mailsimulator/');
+                echo $OUTPUT->help_icon('delete', 'assignsubmission_mailsimulator');
             }
             echo '                  </td>';
             echo '              </tr>';
@@ -234,15 +316,15 @@ $editingteacher=false;
             echo '                  <td style="padding:0; margin:0;">';
             if($editingteacher) {
                 if ($trash) {
-                    print_single_button($CFG->wwwroot . '/mod/assignment/view.php', array('id' => $this->cm->id, 'mid' => $pid, 'delete' => 3), get_string('restore'));
+                    print_single_button($CFG->wwwroot . '/mod/assign/submission/mailsimulator/mailbox.php', array('id' => $this->cm->id, 'mid' => $tid, 'delete' => 3), get_string('restore'));
                 } else {
-                    print_single_button($CFG->wwwroot . '/mod/assignment/view.php', array('id' => $this->cm->id, 'mid' => $pid, 'delete' => 2), get_string('trash', 'assignment_mailsimulator'));
+                    print_single_button($CFG->wwwroot . '/mod/assign/submission/mailsimulator/mailbox.php', array('id' => $this->cm->id, 'mid' => $tid, 'delete' => 2), get_string('trash', 'assignsubmission_mailsimulator'));
                 }
             }
             echo '                  </td>';
             echo '                  <td style="padding:0; margin:0;">';
             if($editingteacher) {
-                helpbutton('trashrestore', get_string('trashrestore', 'assignment_mailsimulator'), 'assignment/type/mailsimulator/');
+                echo $OUTPUT->help_icon('trashrestore', 'assignsubmission_mailsimulator');
             }
             echo '                  </td>';
             echo '              </tr>';
@@ -255,7 +337,7 @@ $editingteacher=false;
             echo get_string('weight', 'assignsubmission_mailsimulator') . ': ' . $mailobj->weight;
             echo '                  </td>';
             echo '                  <td style="padding:0; margin:0;" >';
-            //helpbutton('weight', get_string('weight', 'assignment_mailsimulator'), 'assignment/type/mailsimulator/');
+            echo $OUTPUT->help_icon('weight', 'assignsubmission_mailsimulator');
             echo '                  </td>';
             echo '              </tr>';
             echo '          </table>';
@@ -335,6 +417,36 @@ $editingteacher=false;
 
             $DB->insert_record('assignsubmission_mail_sgndml', $signedoutmailobj);
         }
+    }
+
+    function delete_mail_and_children($mailid) {
+        global $DB;
+
+        $this->delete_mail($mailid);
+
+        $cid = $DB->get_field('assignsubmission_mail_mail', 'id', array('parent' => $mailid));
+
+        if ($cid) {
+            $this->delete_mail_and_children($cid);
+        } else {
+            //$mailcount = $DB->get_field('assignment', 'var1', 'id', $this->assignment->id) - 1;
+            //set_field('assignment', 'var1', $mailcount, 'id', $this->assignment->id);
+        }
+    }
+
+    function handle_trash($mailid, $delete=true) {
+        global $DB;
+
+        $status = 0;
+
+        if ($delete) {
+            $status = 1;
+            //$mailcount = get_field('assignment', 'var1', 'id', $this->assignment->id) - 1;
+            //set_field('assignment', 'var1', $mailcount, 'id', $this->assignment->id);
+        }
+
+        $tid = $DB->get_field('assignsubmission_mail_tmplt', 'id', array('mailid' => $mailid));
+        $DB->set_field('assignsubmission_mail_tmplt', 'deleted', $status, array('id' => $tid));
     }
 
     function get_top_parent_id($mailid) {
@@ -435,17 +547,19 @@ $editingteacher=false;
 
     // Tabs for the header
     function print_tabs($current='mail') {
-        global $CFG;
+        global $CFG, $DB;
 
         $route = optional_param('route', 0, PARAM_INT);
-
         $tabs = array();
         $row = array();
+        $sql = 'SELECT COUNT(*) FROM {assignsubmission_mail_tmplt} WHERE deleted = 1 AND randgroup != 0 AND mailid IN (SELECT id FROM {assignsubmission_mail_mail} WHERE assignment = ' . $this->cm->instance . ')';
+        $counttrashmail = $DB->get_field_sql($sql);
 
         $row[] = new tabobject('mail', $CFG->wwwroot . '/mod/assign/submission/mailsimulator/mailbox.php?id=' . $this->cm->id, get_string('mailbox', 'assignsubmission_mailsimulator'));
         $row[] = new tabobject('addmail', $CFG->wwwroot . '/mod/assign/submission/mailsimulator/mail.php?id=' . $this->cm->id, get_string('addmail', 'assignsubmission_mailsimulator'));
         $row[] = new tabobject('addcontacts', $CFG->wwwroot . '/mod/assign/submission/mailsimulator/contacts.php?id=' . $this->cm->id, get_string('addcontacts', 'assignsubmission_mailsimulator'));
-    
+        $row[] = new tabobject('trashmail', $CFG->wwwroot . '/mod/assign/submission/mailsimulator/mailbox.php?id=' . $this->cm->id . '&route=3', get_string('trash', 'assignsubmission_mailsimulator') . ' (' . $counttrashmail . ')');
+
         $tabs[] = $row;
 
         print_tabs($tabs, $current);
@@ -553,7 +667,7 @@ $editingteacher=false;
 
     function get_nested_from_child($mailobj) {
         global $DB;
-        $message = '<div class="mailmessage">' . format_text(unserialize($mailobj->message), FORMAT_MOODLE);
+        $message = '<div class="mailmessage">' . format_text(unserialize($mailobj->message)['text'], FORMAT_MOODLE);
         $dept = 1;
         $attachment = '';
 
@@ -561,7 +675,7 @@ $editingteacher=false;
             $from = $this->get_sender_string($mailobj);
             $date = date('j M Y, H.i', $mailobj->timesent);
             $message .= '<br /><br/>' . $date . ' ' . get_string('wrote', 'assignsubmission_mailsimulator', $from) . ':';
-            $message .= '<div style="border-left: 2px outset #000000; padding: 5px">' . 
+            $message .= '<div style="border-left: 2px outset #000000; padding: 5px; padding-bottom: 0px;">' . 
                 ($mailobj->attachment ? $this->get_files_str($mailobj->id, $mailobj->userid) : '') . 
                 format_text(unserialize($mailobj->message)['text'], FORMAT_MOODLE);
             $dept++;
@@ -603,16 +717,16 @@ $editingteacher=false;
             } else {
                 $from = $this->get_sender_string($m);
                 $replystr .= date('j F Y, H.i', $m->timesent) . ' ' . get_string('wrote', 'assignsubmission_mailsimulator', $from) . 
-                ':<br /><div style="border-left: 2px outset #000000; padding: 5px">';
+                ':<br /><div style="border-left: 2px outset #000000; padding: 5px; padding-bottom: 0px;">';
             }
 
             //$replystr .= ( $m->attachment ? $this->get_files_str($m->id, $m->userid) : '') . format_text($m->message);
             $replystr .= format_text(unserialize($m->message)['text'], FORMAT_MOODLE);
 
             if ($editbuttons) {
-                $replystr .= '<span style="text-align:right">' . print_single_button($CFG->wwwroot . 
+                $replystr .= '<div style="text-align:right">' . 'FDFGDFGFD' . print_single_button($CFG->wwwroot . 
                     '/mod/assign/submission/mailsimulator/mail.php', array('id' => $this->cm->id, 'mid' => $m->id), 
-                    get_string('edit'), 'get', '_self', true) . '</span>';
+                    get_string('edit'), 'get', '_self', true) . '</div>';
             }
             if ($m->attachment == 1) {
                 $attachment = 1;
@@ -735,7 +849,7 @@ $editingteacher=false;
             }
             */
             if ($mail->parent == 0) {
-              //  $this->add_parent($mailid, $gid);
+                $this->add_parent($mailid, $gid);
             } else {
                 if (!has_capability('mod/assign:grade', context_module::instance($this->cm->id))) {
 
@@ -909,7 +1023,7 @@ $editingteacher=false;
 
         //$submission = $this->get_submission();
         $mid = optional_param('mid', 0, PARAM_INT);       // Mail id
-        $link = $CFG->wwwroot . '/mod/assign/submission/mailsimulator/mail.php?id=' . $this->cm->id . '&add=1&re=';
+        $link = $CFG->wwwroot . '/mod/assign/submission/mailsimulator/mail.php?id=' . $this->cm->id . '&re=';
         $imgurl = $CFG->wwwroot . '/mod/assign/submission/mailsimulator/pix/';
 
         if ($mid) {
@@ -918,23 +1032,23 @@ $editingteacher=false;
                                 <tr>
                                     <td width="92"></td>
                                     <td >
-                                        <a href="' . $link . '1&tid=' . $mid . '" title="' . get_string('reply', 'assignment_mailsimulator') . '" onmouseover="document.re.src=\'' . $imgurl . 'button-reply-down.png\'" onmouseout="document.re.src=\'' . $imgurl . 'button-reply.png\'">
+                                        <a href="' . $link . '1&tid=' . $mid . '" title="' . get_string('reply', 'assignsubmission_mailsimulator') . '" onmouseover="document.re.src=\'' . $imgurl . 'button-reply-down.png\'" onmouseout="document.re.src=\'' . $imgurl . 'button-reply.png\'">
                                             <img name="re" src="' . $imgurl . 'button-reply.png">
                     </a>
                                     </td>
                                     <td >
-                                        <a href="' . $link . '2&tid=' . $mid . '" title="' . get_string('replyall', 'assignment_mailsimulator') . '" onmouseover="document.all.src=\'' . $imgurl . 'button-replyall-down.png\'" onmouseout="document.all.src=\'' . $imgurl . 'button-replyall.png\'">
+                                        <a href="' . $link . '2&tid=' . $mid . '" title="' . get_string('replyall', 'assignsubmission_mailsimulator') . '" onmouseover="document.all.src=\'' . $imgurl . 'button-replyall-down.png\'" onmouseout="document.all.src=\'' . $imgurl . 'button-replyall.png\'">
                                             <img name="all" src="' . $imgurl . 'button-replyall.png">
                                         </a>
                                     </td>
                                     <td >
-                                        <a href="' . $link . '3&tid=' . $mid . '" title="' . get_string('forward', 'assignment_mailsimulator') . '" onmouseover="document.fwd.src=\'' . $imgurl . 'button-forward-down.png\'" onmouseout="document.fwd.src=\'' . $imgurl . 'button-forward.png\'">
+                                        <a href="' . $link . '3&tid=' . $mid . '" title="' . get_string('forward', 'assignsubmission_mailsimulator') . '" onmouseover="document.fwd.src=\'' . $imgurl . 'button-forward-down.png\'" onmouseout="document.fwd.src=\'' . $imgurl . 'button-forward.png\'">
                                             <img name="fwd" src="' . $imgurl . 'button-forward.png">
                                         </a>
                                     </td>
                                     <td width="10">&nbsp;</td>
                                     <td >
-                                        <a href="' . $link . '0&tid=0" title="' . get_string('newmail', 'assignment_mailsimulator') . '" onmouseover="document.newmail.src=\'' . $imgurl . 'button-newmail-down.png\'" onmouseout="document.newmail.src=\'' . $imgurl . 'button-newmail.png\'">
+                                        <a href="' . $link . '0&tid=0" title="' . get_string('newmail', 'assignsubmission_mailsimulator') . '" onmouseover="document.newmail.src=\'' . $imgurl . 'button-newmail-down.png\'" onmouseout="document.newmail.src=\'' . $imgurl . 'button-newmail.png\'">
                                             <img name="newmail" src="' . $imgurl . 'button-newmail.png">
                                         </a>
                                     </td>
@@ -958,7 +1072,7 @@ $editingteacher=false;
                                     </td>
                                     <td width="10">&nbsp;</td>
                                     <td >
-                                        <a href="' . $link . '0&pid=0" title="' . get_string('newmail') . '" onmouseover="document.newmail.src=\'' . $imgurl . 'button-newmail-down.png\'" onmouseout="document.newmail.src=\'' . $imgurl . 'button-newmail.png\'">
+                                        <a href="' . $link . '0&tid=0" title="' . get_string('newmail', 'assignsubmission_mailsimulator') . '" onmouseover="document.newmail.src=\'' . $imgurl . 'button-newmail-down.png\'" onmouseout="document.newmail.src=\'' . $imgurl . 'button-newmail.png\'">
                                             <img name="newmail" src="' . $imgurl . 'button-newmail.png">
                                         </a>
                                     </td>
@@ -1133,3 +1247,4 @@ $editingteacher=false;
     }
 
 }
+

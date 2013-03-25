@@ -10,7 +10,7 @@
 
 $string['addcontacts'] = 'Add contacts';
 $string['addmail'] = 'Add mail';
-$string['addmailalt'] = 'Add alternative mail';
+
 $string['addnewcontact'] = 'Add extra contact';
 $string['addonecontact'] = 'You need to add at least one contact.';
 $string['allsubmissions'] = 'All submissions';
@@ -59,7 +59,9 @@ $string['re'] = 'Re: ';
 $string['readyforgrading'] = 'Ready for grading';
 $string['recieved'] = 'Recieved';
 $string['reply'] = 'Reply';
+$string['reply_help'] = 'fgdfgfdgf';
 $string['replyall'] = 'Reply all';
+$string['replyall_help'] = 'replyall help';
 $string['rating'] = 'Rating';
 $string['send'] = 'Send';
 $string['sent'] = 'Sent';
@@ -71,10 +73,17 @@ $string['timesent'] = 'Time sent';
 $string['trash'] = 'Trash';
 $string['typemailsimulator'] = 'Mail Simulator';
 $string['updatecorrectiontemplate'] = 'Update a correction template / weight';
+$string['updatecorrectiontemplate_help'] = 'update helphelp';
 $string['vieweditmail'] = 'View/Edit Mail';
 
 $string['weight_maxweight'] = 'Weigt / Maxweight';
 $string['wrote'] = '{$a} wrote';
+
+$string['delete'] = 'Delete a mail';
+$string['delete_help'] = 'Delete HELP';
+
+$string['trashrestore'] = 'Trash/restore';
+$string['trashrestore_help'] = 'Trash/restore help';
 
 $string['weight'] = 'Weight';
 $string['weight_help'] = "Weight BLA HELP.";
@@ -84,3 +93,6 @@ $string['mailadmin'] = "Mail Simulator admin page";
 $string['enabled'] = 'Online text';
 $string['enabled_help'] = 'If enabled, students are able to work with Mail Simulator.';
 $string['pluginname'] = 'Mail Simulator';
+
+$string['addalternativemail'] = 'Add an alternative mail';
+$string['addalternativemail_help'] = '<p>Each time a new student checkout the assignment for the first time the student is given as a set of random mail, the more alternatives a mail has the less likely it is that to two students receive the same mail.</p><p>This makes it difficult for students to cheat.</p>';
