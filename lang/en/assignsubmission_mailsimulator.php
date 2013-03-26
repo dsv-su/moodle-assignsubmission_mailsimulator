@@ -88,6 +88,9 @@ $string['trashrestore_help'] = 'Trash/restore help';
 $string['weight'] = 'Weight';
 $string['weight_help'] = "Weight BLA HELP.";
 
+$string['defaultmaxfilessubmission'] = 'Maximum number of mails';
+$string['configmaxfiles'] = 'The default value for the \'Maximum number of mails\' setting on the assignment configuration page';
+
 $string['mailsimulator'] = 'Mail Simulator submission';
 $string['mailadmin'] = "Mail Simulator admin page";
 $string['enabled'] = 'Online text';
