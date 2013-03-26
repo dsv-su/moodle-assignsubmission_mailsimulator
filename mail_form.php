@@ -156,23 +156,20 @@ class mail_form extends moodleform {
         $mform->setType('subject', PARAM_TEXT);
         $mform->setDefault('subject', $this->_customdata->subject);
 
-        //Why should we use TextArea for students mails?
-        if ($this->_customdata->teacher /*&& $this->_customdata->userid==0*/) {
+        if ($this->_customdata->teacher) {
             $mform->addElement('editor', 'message', get_string('message', 'assignsubmission_mailsimulator'), array('cols' => 83, 'rows' => 20));
             $mform->setType('message', PARAM_RAW); // to be cleaned before display
-            //$mform->setHelpButton('message', array('reading', 'writing', 'richtext'), false, 'editorhelpbutton');
+            //$mform->addHelpButton('message', array('reading', 'writing', 'richtext'), false, 'editorhelpbutton');
         } else {
-            $mform->addElement('textarea', 'message', get_string('message', 'assignsubmission_mailsimulator'), array('rows' => 10, 'cols' => 83));
+            $mform->addElement('textarea', 'message', get_string('message', 'assignsubmission_mailsimulator'), array('cols' => 83, 'rows' => 20));
             $mform->setType('message', PARAM_TEXT);
         }
 
         $mform->setDefault('message', $this->_customdata->message);
 
-        // here upload of the files should go!
+        // Here upload of the files goes!
        // if (((!isset($this->_customdata->inactive) || $this->_customdata->inactive) && $this->_customdata->file_types_str)) {
-            $maxbytes = 300000000;
-            $mform->addElement('filemanager', 'attachment', get_string('attachment', 'forum'), null,
-                array('subdirs' => 0, 'maxbytes' => $maxbytes, 'maxfiles' => 5, 'accepted_types' => '*' ));
+            $mform->addElement('filemanager', 'attachment', get_string('attachment', 'forum'), null, $this->_customdata->fileoptions);
        // }
 
         $this->add_action_buttons(true, 'Submit');

@@ -110,38 +110,6 @@ class mailbox {
         }
         //var_dump($attachments);
         return $attachments;
-
-/*
-        $this->modcontext = context_module::instance($this->cm->id);
-        $fs = get_file_storage();
-        if ($this->post) {
-            if ($this->attachment) {
-                $this->set_file_and_format_data($this->attachment);
-            } else {
-                $attach = $fs->get_area_files($this->modcontext->id, 'mod_forum', 'attachment', $this->post->id, 'timemodified', false);
-                $embed  = $fs->get_area_files($this->modcontext->id, 'mod_forum', 'post', $this->post->id, 'timemodified', false);
-                $files = array_merge($attach, $embed);
-                $this->set_file_and_format_data($files);
-            }
-            if (!empty($this->multifiles)) {
-                $this->keyedfiles[$this->post->id] = $this->multifiles;
-            } else if (!empty($this->singlefile)) {
-                $this->keyedfiles[$this->post->id] = array($this->singlefile);
-            }
-*/
-/*
-        if (empty($this->multifiles) && !empty($this->singlefile)) {
-            $this->multifiles = array($this->singlefile); // copy_files workaround
-        }
-        // depending on whether there are files or not, we might have to change richhtml/plainhtml
-        if (empty($this->attachment)) {
-            if (!empty($this->multifiles)) {
-                $this->add_format(PORTFOLIO_FORMAT_RICHHTML);
-            } else {
-                $this->add_format(PORTFOLIO_FORMAT_PLAINHTML);
-            }
-        }
-*/
     }
 
     function view_assignment_mails($trash=false) {
@@ -1232,7 +1200,6 @@ class mailbox {
             foreach ($attachments as $attachment) {
                 $bodystr .=  '<a href=' . $CFG->wwwroot . $attachment->url . '>'. $CFG->wwwroot . $attachment->url .'</a><br/>';
             }
-
             $bodystr .= $this->get_nested_from_child($mailobject);
         } else {
             $bodystr .= format_text($mailobject->message, FORMAT_MOODLE);

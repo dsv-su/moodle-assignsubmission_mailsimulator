@@ -126,23 +126,21 @@ echo '                      <td style="background-color:lightgray;">' . $mailstr
 
 $customdata->reply = $re;
 
+$fileoptions = array('subdirs' => 0, 'maxbytes' => get_config('assignsubmission_mailsimulator')->maxbytes, 'maxfiles' => get_config('assignsubmission_mailsimulator')->maxfilesubmissions, 'accepted_types' => '*' );
+$customdata->fileoptions = $fileoptions;
+
 require_once($CFG->dirroot.'/mod/assign/submission/mailsimulator/mail_form.php');
 //Instantiate simplehtml_form 
 $mailform = new mail_form('?gid=' . $gid, $customdata);
 
-//var_dump($customdata);break;
-
 $maxbytes = 300000000;
-
 if ($customdata->attachment<>0) {
     $draftitemid = $customdata->attachment;    
 } else {
     $draftitemid = file_get_submitted_draft_itemid('attachment');
-    file_prepare_draft_area($draftitemid, $context->id, 'assignsubmission_mailsimulator', 'attachment', empty($fromform->id)?null:$customdata->id, array('subdirs' => 0, 'maxbytes' => $maxbytes, 'maxfiles' => 5, 'accepted_types' => '*' ));
+    file_prepare_draft_area($draftitemid, $context->id, 'assignsubmission_mailsimulator', 'attachment', empty($fromform->id)?null:$customdata->id, $fileoptions);
 }
 
-//var_dump($draftitemid);
-//var_dump($context);
 //Form processing and displaying is done here
 if ($mailform->is_cancelled()) {
   var_dump('Cancel');
@@ -153,19 +151,18 @@ if ($mailform->is_cancelled()) {
         $objmessage['text'] = $fromform->message;
         $fromform->message = $objmessage;
     }
-
-    //var_dump($fromform);break;
     $fromform->message=serialize($fromform->message);
-    file_save_draft_area_files($fromform->attachment, $context->id, 'assignsubmission_mailsimulator', 'attachment',
-                   $fromform->mailid, array('subdirs' => 0, 'maxbytes' => $maxbytes, 'maxfiles' => 5));
     //$fromform->attachment=0;
   //In this case you process validated data. $mform->get_data() returns data posted in form.
     if ($mailform->is_validated()) {
         if ($DB->record_exists('assignsubmission_mail_mail', array('id' => $fromform->mailid))) {
           $mailboxinstance->update_mail($fromform);
         } else {
-          $mailboxinstance->insert_mail($fromform, $gid);
+          $currentmailid = $mailboxinstance->insert_mail($fromform, $gid);
         }
+
+        file_save_draft_area_files($fromform->attachment, $context->id, 'assignsubmission_mailsimulator', 'attachment',
+                   $currentmailid, array('subdirs' => 0, 'maxbytes' => $maxbytes, 'maxfiles' => 5));
 
         redirect($CFG->wwwroot . '/mod/assign/submission/mailsimulator/mailbox.php?id=' . $cm->id, '', 0);
     }
