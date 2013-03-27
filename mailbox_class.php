@@ -92,24 +92,51 @@ class mailbox {
     }
 
     function get_files_str($mid, $userid) {
-        global $DB, $USER;
+        global $DB, $USER, $OUTPUT;
         $fs = get_file_storage();
-        //$attachment += 0;
         $files = $fs->get_area_files($this->context->id, 'assignsubmission_mailsimulator', 'attachment', $mid);
 
-        $attachments = array();
-        foreach ($files as $file) {
-            if ($file->is_directory()) {
-                continue;
+        $output = '';
+        $type = 'html';
+
+        if ($files) {
+            $output .= '<p align=right style="padding-right:10px;>';
+            foreach ($files as $file) {
+                if ($file->is_directory()) {
+                    continue;
+                }
+                /*
+                $attach = new stdClass();
+                $attach->file = $file;
+                $attach->filename = $file->get_filename();
+                $attach->url = file_encode_url($CFG->wwwroot.'/pluginfile.php', '/'.$this->context->id.'/assignsubmission_mailsimulator/attachment/'. $mid .'/'.$attach->filename);
+                $attachments[] = $attach;
+                */
+
+                $filename = $file->get_filename();
+                $mimetype = $file->get_mimetype();
+                $iconimage = $OUTPUT->pix_icon(file_file_icon($file), get_mimetype_description($file), 'moodle', array('class' => 'icon'));
+                $path = file_encode_url($CFG->wwwroot.'/pluginfile.php', '/'.$this->context->id.'/assignsubmission_mailsimulator/attachment/'.$mid.'/'.$filename);
+
+                if ($type == 'html') {
+                    $output .= "<a href=\"$path\">$iconimage</a> ";
+                    $output .= "<a href=\"$path\">".s($filename)."</a>";
+                    /*if ($canexport) {
+                        $button->set_callback_options('forum_portfolio_caller', array('postid' => $post->id, 'attachment' => $file->get_id()), 'mod_forum');
+                        $button->set_format_by_file($file);
+                        $output .= $button->to_html(PORTFOLIO_ADD_ICON_LINK);
+                    }*/
+                    $output .= "<br />";
+
+                } else if ($type == 'text') {
+                    $output .= "$strattachment ".s($filename).":\n$path\n";
+                }
             }
-            $attach = new stdClass();
-            $attach->file = $file;
-            $attach->filename = $file->get_filename();
-            $attach->url = file_encode_url($CFG->wwwroot.'/pluginfile.php', '/'.$this->context->id.'/assignsubmission_mailsimulator/attachment/'. $mid .'/'.$attach->filename);
-            $attachments[] = $attach;
-        }
-        //var_dump($attachments);
-        return $attachments;
+            $output .= '</p>';
+        }   
+        //return $attachments;
+
+        return $output;
     }
 
     function view_assignment_mails($trash=false) {
@@ -178,13 +205,9 @@ class mailbox {
             if ($replyobject) {
                 $mailobj = $replyobject;
             } else {
-                $mailobj->message = '<div class="mailmessage">' . format_text(unserialize($mailobj->message)["text"], FORMAT_MOODLE) . '</div>';
-                
-                //var_dump($mailobj);
                 $attachments = $mailobj->attachment>0 ? $this->get_files_str($mailobj->id, 0) : '';
-                foreach ($attachments as $attachment) {
-                    $mailobj->message .=  '<a href=' . $CFG->wwwroot . $attachment->url . '>'. $CFG->wwwroot . $attachment->url .'</a><br/>';
-                }
+                $message = format_text(unserialize($mailobj->message)["text"], FORMAT_MOODLE);
+                $mailobj->message = '<div class="mailmessage">' . $attachments . $message . '</div>';
 
                 if($editingteacher) {
                     $mailobj->message .= '<span style="text-align:right">' . print_single_button($CFG->wwwroot . 
@@ -642,17 +665,11 @@ class mailbox {
             $from = $this->get_sender_string($mailobj);
             $date = date('j M Y, H.i', $mailobj->timesent);
             $message .= '<br /><br/>' . $date . ' ' . get_string('wrote', 'assignsubmission_mailsimulator', $from) . ':';
-            $message .= '<div style="border-left: 2px outset #000000; padding: 5px; padding-bottom: 0px;">'; 
-                
+            $message .= '<div style="border-left: 2px outset #000000; padding: 5px; padding-bottom: 0px;">';    
+            $message .= $mailobj->attachment>0 ? $this->get_files_str($mailobj->id, 0) : '';
             $message .= format_text(unserialize($mailobj->message)['text'], FORMAT_MOODLE);
                 //$message .= ($mailobj->attachment ? $this->get_files_str($mailobj->id, $mailobj->userid) : '')
-
-            $attachments = $mailobj->attachment>0 ? $this->get_files_str($mailobj->id, 0) : '';
-            
-            foreach ($attachments as $attachment) {
-                $message .=  '<a href=' . $CFG->wwwroot . $attachment->url . '>'. $CFG->wwwroot . $attachment->url .'</a><br/>';
-            }
-
+        
             $dept++;
         }
 
@@ -696,25 +713,19 @@ class mailbox {
             }
 
             //$replystr .= ( $m->attachment ? $this->get_files_str($m->id, $m->userid) : '') . format_text($m->message);
-            
+            $replystr .= $m->attachment>0 ? $this->get_files_str($m->id, 0) : '';
             $replystr .= format_text(unserialize($m->message)['text'], FORMAT_MOODLE);
-
-            $attachments = $m->attachment>0 ? $this->get_files_str($m->id, 0) : '';
-            //var_dump($attachments);
-            foreach ($attachments as $attachment) {
-                $replystr .=  '<a href=' . $CFG->wwwroot . $attachment->url . '>'. $CFG->wwwroot . $attachment->url .'</a><br/>';
-            }
 
             if ($editbuttons) {
                 $replystr .= '<div style="text-align:right">' . 'FDFGDFGFD' . print_single_button($CFG->wwwroot . 
                     '/mod/assign/submission/mailsimulator/mail.php', array('id' => $this->cm->id, 'mid' => $m->id), 
                     get_string('edit'), 'get', '_self', true) . '</div>';
             }
-            if ($m->attachment == 1) {
+            /*if ($m->attachment == 1) {
                 $attachment = 1;
             }
-
-            $mailobj->attachment = $attachment;
+            */
+            //$mailobj->attachment = $m->attachment;
             $divcount++;
         }
         for ($i = 0; $i < count($replys); $i++) {
@@ -897,15 +908,11 @@ class mailbox {
                 if ($nested)
                     $replyobject[] = $nested;
                 else {
-                    $mailobj->message = '<div class="mailmessage">' . format_text(unserialize($mailobj->message)['text'], FORMAT_MOODLE) ;
-                    //var_dump($mailobj);
+                    $message = format_text(unserialize($mailobj->message)['text'], FORMAT_MOODLE);
                     $attachments = $mailobj->attachment>0 ? $this->get_files_str($mailobj->id, 0) : '';
-                    foreach ($attachments as $attachment) {
-                        $mailobj->message .=  '<a href=' . $CFG->wwwroot . $attachment->url . '>'. $CFG->wwwroot . $attachment->url .'</a><br/>';
-                    }
+                    $mailobj->message = '<div class="mailmessage">' . $attachments . $message . '</div>';
 
                     //($mailobj->attachment ? $this->get_files_str($mailobj->id, $mailobj->userid) : '') 
-                    $mailobj->message .= '</div>';
                     
                     $replyobject[] = $mailobj;
                 }
@@ -1195,11 +1202,7 @@ class mailbox {
 
         if ($sentview) {
             //$bodystr .= ( $mailobject->attachment ? $this->get_files_str($mailobject->id, $mailobject->userid) : '');
-
-            $attachments = $mailobject->attachment>0 ? $this->get_files_str($mailobject->id, 0) : '';
-            foreach ($attachments as $attachment) {
-                $bodystr .=  '<a href=' . $CFG->wwwroot . $attachment->url . '>'. $CFG->wwwroot . $attachment->url .'</a><br/>';
-            }
+            $bodystr .= $mailobject->attachment>0 ? $this->get_files_str($mailobject->id, 0) : '';
             $bodystr .= $this->get_nested_from_child($mailobject);
         } else {
             $bodystr .= format_text($mailobject->message, FORMAT_MOODLE);

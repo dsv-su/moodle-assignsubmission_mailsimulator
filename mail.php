@@ -73,12 +73,11 @@ if ($mid) {
     $inactive = !$mailboxinstance->get_signed_out_status($top);
 
     $customdata->inactive = $inactive;
+
     unset($customdata->id);
 } else {
     $customdata = $mailboxinstance->prepare_mail($tid);  
 } 
-
-//$customdata = $mailboxinstance->prepare_mail();
 
 $titlestr = get_string('newmail', 'assignsubmission_mailsimulator');
 $mailstr = '';
@@ -133,9 +132,9 @@ require_once($CFG->dirroot.'/mod/assign/submission/mailsimulator/mail_form.php')
 //Instantiate simplehtml_form 
 $mailform = new mail_form('?gid=' . $gid, $customdata);
 
-$maxbytes = 300000000;
-if ($customdata->attachment<>0) {
-    $draftitemid = $customdata->attachment;    
+// Get existing drafts
+if ($customdata->attachment>0) {
+    $draftitemid = $customdata->attachment;
 } else {
     $draftitemid = file_get_submitted_draft_itemid('attachment');
     file_prepare_draft_area($draftitemid, $context->id, 'assignsubmission_mailsimulator', 'attachment', empty($fromform->id)?null:$customdata->id, $fileoptions);
@@ -143,8 +142,9 @@ if ($customdata->attachment<>0) {
 
 //Form processing and displaying is done here
 if ($mailform->is_cancelled()) {
-  var_dump('Cancel');
+    redirect($CFG->wwwroot . '/mod/assign/submission/mailsimulator/mailbox.php?id=' . $cm->id, '<center>Return to the mailbox view</center>', 0);
     //Handle form cancel operation, if cancel button is present on form
+
 } else if ($fromform = $mailform->get_data()) {
     if (!$teacher) { // We need to simulate the same structure as it would be a teacher's mail
         $objmessage  = array();
@@ -152,9 +152,17 @@ if ($mailform->is_cancelled()) {
         $fromform->message = $objmessage;
     }
     $fromform->message=serialize($fromform->message);
-    //$fromform->attachment=0;
-  //In this case you process validated data. $mform->get_data() returns data posted in form.
+
+  //In this case you process validated data. $mailform->get_data() returns data posted in form.
     if ($mailform->is_validated()) {
+
+        //Check if attachments exist in draft area, if not, set 'attachment=0'
+        $fs = get_file_storage();
+        $files = $fs->get_area_files($context->id, 'assignsubmission_mailsimulator', 'attachment', $fromform->mailid);
+        if ($fromform->attachment>0 && (!$files)) {
+            $fromform->attachment = 0;
+        } 
+
         if ($DB->record_exists('assignsubmission_mail_mail', array('id' => $fromform->mailid))) {
           $mailboxinstance->update_mail($fromform);
         } else {
@@ -166,9 +174,8 @@ if ($mailform->is_cancelled()) {
 
         redirect($CFG->wwwroot . '/mod/assign/submission/mailsimulator/mailbox.php?id=' . $cm->id, '', 0);
     }
+
 } else {
-  // this branch is executed if the form is submitted but the data doesn't validate and the form should be redisplayed
-  // or on the first display of the form.
   //Set default data (if any)
     $mailform->set_data($toform);
     $mailform->set_data(array('attachment'=>$draftitemid));

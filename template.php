@@ -18,7 +18,7 @@ require_login($course);
 require_once($CFG->dirroot.'/mod/assign/submission/mailsimulator/mailbox_class.php');
 $mailboxinstance = new mailbox($context, $cm, $course);
 
-$mailstr = 'NO MAIL IN URL<br>';
+//$mailstr = 'NO MAIL IN URL<br>';
 
 if ($mid) {
     // Check if mail exists. A template must have a mail.
@@ -54,7 +54,7 @@ require_once($CFG->dirroot.'/mod/assign/submission/mailsimulator/template_form.p
 $tform = new template_form(null, $customdata);
 
 if ($tform->is_cancelled()){
-    echo "CANCELLED";
+    redirect($CFG->wwwroot . '/mod/assign/submission/mailsimulator/mailbox.php?id=' . $cm->id, '<center>Return to the mailbox view</center>' , 0);
 } else if ($fromform=$tform->get_data()){
     if ($tform->is_validated()) {
         $tstatus = 'Template ';

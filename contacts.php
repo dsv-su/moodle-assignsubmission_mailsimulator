@@ -37,7 +37,7 @@ $mform = new contacts_form(null, array("moduleID"=>$id));
 //Form processing and displaying is done here
 if ($mform->is_cancelled()) {
 
-    //***TO BE ADDED***
+    redirect($CFG->wwwroot . '/mod/assign/submission/mailsimulator/mailbox.php?id=' . $cm->id, '<center>Return to the mailbox view</center>' , 0);
 
     //Handle form cancel operation, if cancel button is present on form
 } else if ($fromform = $mform->get_data()) {
