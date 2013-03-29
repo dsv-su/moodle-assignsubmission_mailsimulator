@@ -97,7 +97,7 @@ $string['defaultnumbermails'] = 'Number of mails';
 $string['defaultnumbermails_help'] = 'The default value for the \'Number of mails\' setting on the assignment configuration page';
 
 $string['filesubmissions'] = 'Mail Simulator attachments allowed';
-$string['filesubmissions_help'] = 'If enabled, users are able to attach documents.';
+$string['filesubmissions_help'] = 'If enabled, students are able to attach documents.';
 
 $string['teacherid'] = 'Teacher mail';
 $string['teacherid_help'] = 'This teacher will be added to sender/recipient lists.';

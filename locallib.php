@@ -35,11 +35,22 @@ class assign_submission_mailsimulator extends assign_submission_plugin {
 
         $cmid = optional_param('update', 0, PARAM_INT);
 
-        //$filesubmissionsdefault = $this->get_config('filesubmissions');
-        $filesubmissionsdefault = get_config('assignsubmission_mailsimulator')->filesubmissions;
-        $mailnumberdefault = get_config('assignsubmission_mailsimulator')->mailnumber;
-        $maxweightdefault = get_config('assignsubmission_mailsimulator')->maxweight;
-        $maxbytesdefault = get_config('assignsubmission_mailsimulator')->maxbytes;
+        //$filesubmissionsdefault = get_config('assignsubmission_mailsimulator')->filesubmissions;
+        //$mailnumberdefault = get_config('assignsubmission_mailsimulator')->mailnumber;
+        //$maxweightdefault = get_config('assignsubmission_mailsimulator')->maxweight;
+        //$maxbytesdefault = get_config('assignsubmission_mailsimulator')->maxbytes;
+
+        $filesubmissionsdefault = $this->get_config('filesubmissions');
+        $mailnumberdefault = $this->get_config('mailnumber');
+        $maxweightdefault = $this->get_config('maxweight');
+        $maxbytesdefault = $this->get_config('maxbytes');
+        $teacherdefault = $this->get_config('teacherid');
+
+        var_dump($filesubmissionsdefault);
+        var_dump($mailnumberdefault);
+        var_dump($maxweightdefault);
+        var_dump($maxbytesdefault);
+        var_dump($teacherdefault);
 
         $mform->setDefault('assignsubmission_file_enabled', 0);
         $mform->setDefault('assignsubmission_blog_enabled', 0);
@@ -104,7 +115,7 @@ class assign_submission_mailsimulator extends assign_submission_plugin {
         }
 
         $mform->addElement('select', 'assignsubmission_mailsimulator_teacherid', get_string('teacherid', 'assignsubmission_mailsimulator'), $teachers);
-        //$mform->setDefault('assignsubmission_mailsimulator_teacherid', '')
+        $mform->setDefault('assignsubmission_mailsimulator_teacherid', $teacherdefault);
         $mform->addHelpButton('assignsubmission_mailsimulator_teacherid', 'teacherid', 'assignsubmission_mailsimulator');
         $mform->disabledIf('assignsubmission_mailsimulator_teacherid', 'assignsubmission_mailsimulator_enabled', 'eq', 0);
 
@@ -123,6 +134,10 @@ class assign_submission_mailsimulator extends assign_submission_plugin {
      */
     public function save_settings(stdClass $data) {
         $this->set_config('filesubmissions', $data->assignsubmission_mailsimulator_filesubmissions);
+        $this->set_config('mailnumber', $data->assignsubmission_mailsimulator_mailnumber);
+        $this->set_config('maxweight', $data->assignsubmission_mailsimulator_maxweight);        
+        $this->set_config('maxbytes', $data->assignsubmission_mailsimulator_maxbytes);
+        $this->set_config('teacherid', $data->assignsubmission_mailsimulator_teacherid);
         return true;
     }
 
@@ -136,6 +151,7 @@ class assign_submission_mailsimulator extends assign_submission_plugin {
      */
     public function get_form_elements($submission, MoodleQuickForm $mform, stdClass $data) {
         $cmid = required_param('id', PARAM_INT);
+        //var_dump($this);
         $mailboxurl = new moodle_url('/mod/assign/submission/mailsimulator/mailbox.php', array("id"=>$cmid));
         redirect($mailboxurl);
         return true;
