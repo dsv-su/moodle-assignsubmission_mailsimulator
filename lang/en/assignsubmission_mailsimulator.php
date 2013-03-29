@@ -43,8 +43,8 @@ $string['mail'] = 'Mail';
 $string['mailbox'] = 'Mailbox';
 $string['mailboxes'] = 'Mailboxes';
 $string['mailtostudent'] = 'STUDENT E-MAIL ADRESS';
-$string['maxweightpermail'] = 'Maxweight per mail';
-$string['maximumsize'] = 'Maximum attachment size';
+
+//$string['maximumsize'] = 'Maximum attachment size';
 $string['medium'] = 'medium';
 $string['message'] = 'Message';
 $string['needcompletion'] = 'Need completion';
@@ -53,7 +53,7 @@ $string['newcorrectiontemplate'] = 'New correction template';
 $string['newmail'] = 'New Mail';
 $string['noanswer'] = 'No Answer';
 $string['nonewstudentmail'] = 'No new student mail';
-$string['numberofmail'] = 'Number of mail';
+//$string['numberofmail'] = 'Number of mail';
 $string['priority'] = 'Priority';
 $string['re'] = 'Re: ';
 $string['readyforgrading'] = 'Ready for grading';
@@ -67,7 +67,7 @@ $string['send'] = 'Send';
 $string['sent'] = 'Sent';
 $string['studentreplys'] = 'Student replys:';
 $string['subject'] = 'Subject';
-$string['teachermail'] = 'Teacher mail';
+
 $string['timemarked'] = 'TIMEMARKED';
 $string['timesent'] = 'Time sent';
 $string['trash'] = 'Trash';
@@ -87,9 +87,20 @@ $string['trashrestore_help'] = 'Trash/restore help';
 
 $string['weight'] = 'Weight';
 $string['weight_help'] = "Weight BLA HELP.";
+$string['maxweight'] = 'Maxweight per mail';
+$string['maxweight_help'] = 'Maximum weight that a mail may have.';
 
-$string['defaultmaxfilessubmission'] = 'Maximum number of mails';
-$string['configmaxfiles'] = 'The default value for the \'Maximum number of mails\' setting on the assignment configuration page';
+$string['maxattachments'] = 'Maximum size of attachments';
+$string['maxattachments_help'] = 'Help...';
+
+$string['defaultnumbermails'] = 'Number of mails';
+$string['defaultnumbermails_help'] = 'The default value for the \'Number of mails\' setting on the assignment configuration page';
+
+$string['filesubmissions'] = 'Mail Simulator attachments allowed';
+$string['filesubmissions_help'] = 'If enabled, users are able to attach documents.';
+
+$string['teacherid'] = 'Teacher mail';
+$string['teacherid_help'] = 'This teacher will be added to sender/recipient lists.';
 
 $string['mailsimulator'] = 'Mail Simulator submission';
 $string['mailadmin'] = "Mail Simulator admin page";

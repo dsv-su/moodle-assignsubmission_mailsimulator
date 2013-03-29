@@ -92,7 +92,7 @@ class mailbox {
     }
 
     function get_files_str($mid, $userid) {
-        global $DB, $USER, $OUTPUT;
+        global $OUTPUT;
         $fs = get_file_storage();
         $files = $fs->get_area_files($this->context->id, 'assignsubmission_mailsimulator', 'attachment', $mid);
 
@@ -105,13 +105,6 @@ class mailbox {
                 if ($file->is_directory()) {
                     continue;
                 }
-                /*
-                $attach = new stdClass();
-                $attach->file = $file;
-                $attach->filename = $file->get_filename();
-                $attach->url = file_encode_url($CFG->wwwroot.'/pluginfile.php', '/'.$this->context->id.'/assignsubmission_mailsimulator/attachment/'. $mid .'/'.$attach->filename);
-                $attachments[] = $attach;
-                */
 
                 $filename = $file->get_filename();
                 $mimetype = $file->get_mimetype();
@@ -134,7 +127,6 @@ class mailbox {
             }
             $output .= '</p>';
         }   
-        //return $attachments;
 
         return $output;
     }
@@ -918,7 +910,7 @@ class mailbox {
                 }
             }
 
-            //$replyobject = $this->vsort($replyobject, 'timesent', false);
+            $replyobject = $this->vsort($replyobject, 'timesent', false);
             $key = null;
 
             foreach ($replyobject as $k => $m) {
@@ -1244,6 +1236,36 @@ class mailbox {
         //}
 
         $DB->update_record('assignsubmission_mail_mail', $mail);
+    }
+
+    // Function for sorting mail
+    function vsort($array, $id="id", $sort_ascending=true) {
+        $temp_array = array();
+
+        while (count($array) > 0) {
+            $lowest_id = 0;
+            $index = 0;
+
+            foreach ($array as $item) {
+                if (isset($item->$id)) {
+                    if ($array[$lowest_id]->$id) {
+                        if ($item->$id < $array[$lowest_id]->$id) {
+                            $lowest_id = $index;
+                        }
+                    }
+                }
+                $index++;
+            }
+
+            $temp_array[] = $array[$lowest_id];
+            $array = array_merge(array_slice($array, 0, $lowest_id), array_slice($array, $lowest_id + 1));
+        }
+
+        if ($sort_ascending) {
+            return $temp_array;
+        } else {
+            return array_reverse($temp_array);
+        }
     }
 
 }
