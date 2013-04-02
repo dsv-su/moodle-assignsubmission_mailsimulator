@@ -14,12 +14,16 @@ class mailbox {
     private $cm;
     private $context;
     private $course;
+    private $assigninstance;
+    private $plugininstance;
 
     public function __construct($context, $cm, $course) {
         $this->context  = $context;
         $this->cm       = $cm;
         $this->course   = $course;
 
+        $this->assigninstance = new assign($context, $cm, $course);
+        $this->plugininstance = new assign_submission_mailsimulator($this->assigninstance, 'mailsimulator');
         /*
         $this->context; // Is a course context
         context_module::instance($this->cm->id)); // Is a module context
@@ -347,7 +351,7 @@ class mailbox {
         }
 
         if ($forgrading) {
-            $sql = 'SELECT sm.id, sm.mailid, p.weight, sm.gainedweight, sm.comment, m.sender, m.subject, m.message, t.correctiontemplate, m.timesent, m.priority, m.attachment, m.userid
+            $sql = 'SELECT sm.id, sm.mailid, t.weight, sm.gainedweight, sm.feedback, m.sender, m.subject, m.message, t.correctiontemplate, m.timesent, m.priority, m.attachment, m.userid
                     FROM {assignsubmission_mail_sgndml} AS sm
                     LEFT JOIN {assignsubmission_mail_tmplt} AS t ON sm.mailid = t.mailid
                     LEFT JOIN {assignsubmission_mail_mail} AS m ON m.id = sm.mailid
@@ -412,8 +416,9 @@ class mailbox {
         if ($cid) {
             $this->delete_mail_and_children($cid);
         } else {
-            //$mailcount = $DB->get_field('assignment', 'var1', 'id', $this->assignment->id) - 1;
-            //set_field('assignment', 'var1', $mailcount, 'id', $this->assignment->id);
+            $mailcount = $this->get_config('mailnumber')-1;
+            $this->plugininstance->set_config('mailnumber', $mailcount);
+            //NEEDS TO BE VERIFIED!
         }
     }
 
@@ -424,8 +429,9 @@ class mailbox {
 
         if ($delete) {
             $status = 1;
-            //$mailcount = get_field('assignment', 'var1', 'id', $this->assignment->id) - 1;
-            //set_field('assignment', 'var1', $mailcount, 'id', $this->assignment->id);
+            $mailcount = $this->get_config('mailnumber')-1;
+            $this->plugininstance->set_config('mailnumber', $mailcount);
+                        //NEEDS TO BE VERIFIED!
         }
 
         $tid = $DB->get_field('assignsubmission_mail_tmplt', 'id', array('mailid' => $mailid));
@@ -593,18 +599,13 @@ class mailbox {
             foreach ($contacts as $key => $con) {
                 $contacts[$key] = $con->firstname . ' ' . $con->lastname . ' &lt;' . $con->email . '&gt;';
             }
-        }
-        /* 
+        } 
 
-        Teacher used to be retrieved from Assignment entry. It has to be changed.
-
-        $teacherid = $DB->get_field('assignment', 'var3', 'id', $this->assignment->id);
-        $teacherobj = $DB->get_record_select('user', 'id=' . $teacherid, 'firstname, lastname, email');
-        */
-
-        $studentobj = $DB->get_record_select('user', 'id = :id', array('id'=> $USER->id), 'firstname, lastname, email');
+        $teacherid = $this->plugininstance->get_config('teacherid');
+        $teacherobj = $DB->get_record('user', array('id' => $teacherid), 'firstname, lastname, email');
+        $studentobj = $DB->get_record('user', array('id'=> $USER->id), 'firstname, lastname, email');
         
-        //$contacts[0] = $teacherobj->firstname . ' ' . $teacherobj->lastname . ' &lt;' . $teacherobj->email . '&gt;';
+        $contacts[0] = $teacherobj->firstname . ' ' . $teacherobj->lastname . ' &lt;' . $teacherobj->email . '&gt;';
 
         if ($teacher) {
             $contacts[TO_STUDENT_ID] = get_string('mailtostudent', 'assignsubmission_mailsimulator');
@@ -623,8 +624,7 @@ class mailbox {
         global $DB;        
 
         $templatemail = new stdClass;
-        //$parentmail->maxweight = $DB->get_field('assignment', 'var2', 'id', $this->assignment->id);
-        $templatemail->maxweight = 5; // TEMP VALUE!!!
+        $templatemail->maxweight = $this->plugininstance->get_config('maxweight');
         $templatemail->id = 0;
 
         if ($mailid) {
@@ -741,8 +741,8 @@ class mailbox {
         global $USER, $DB;
 
         if ($mailobject->sender == 0 && isset($mailobject->userid) && $mailobject->userid == 0) {
-            //$teacherid = $DB->get_field('assignment', 'var3', 'id', $this->assignment->id);
-            //$fromobj = get_record_select('user', 'id=' . $teacherid, 'firstname, lastname, email');
+            $teacherid = $this->plugininstance->get_config('teacherid');
+            $fromobj = $DB->get_record('user', array('id=' => $teacherid), 'firstname, lastname, email');
         } elseif ($mailobject->sender == 0) {
             $fromobj = $DB->get_record('user', array("id" => $USER->id), 'firstname, lastname, email');
         } else {
@@ -762,12 +762,12 @@ class mailbox {
         global $USER, $DB;
 
         $to_mail_arr = $DB->get_records('assignsubmission_mail_to', array('mailid' => $mailid));
-        //$teacherid = get_field('assignment', 'var3', 'id', $this->assignment->id);
+        $teacherid = $this->plugininstance->get_config('teacherid');
         $toarr = array();
 
         foreach ($to_mail_arr as $value) {
             if ($value->contactid == 0) {
-                $toarr[] = $DB->get_record_select('user', 'id=: id', array('id' => $teacherid), 'firstname, lastname, email');
+                $toarr[] = $DB->get_record('user', array('id' => $teacherid), 'firstname, lastname, email');
             } elseif ($value->contactid == TO_STUDENT_ID) {
                 $obj = new stdClass();
 
@@ -1266,6 +1266,216 @@ class mailbox {
         } else {
             return array_reverse($temp_array);
         }
+    }
+
+    //Return a value stored in $this->plugininstance->get_config()
+    function get_config($config) {
+        return $this->plugininstance->get_config($config);
+    }
+
+    function view_grading_feedback($userid=null) {
+        global $CFG, $DB, $OUTPUT;
+
+        $submission = $this->user_have_registered_submission($userid, $this->cm->instance);
+
+        $teacher = has_capability('mod/assign:grade', $this->context);
+
+        if ($teacher) {
+            // update grade/weight
+        }
+
+        // mails that have been signed out to user
+        $signedoutarr = $this->get_user_mails($userid, true);
+        // mails that the student has sent
+        $newmailarr = $DB->get_records_select('assignsubmission_mail_mail', 'parent = 0 AND userid = ' . $userid . ' AND assignment = ' . $this->cm->instance);
+        // Get replies the student has made on hes own mail
+        $newmailarr = $this->get_recursive_replies($newmailarr, $tmparr, $userid);
+
+        $maxweight = 0;
+        $totalgained = 0;
+
+        if ($signedoutarr) {
+            foreach ($signedoutarr as $mailobj) {
+                $mailobj->id = $mailobj->mailid;
+                $mailobj->message = '<div class="mailmessage">' . format_text(unserialize($mailobj->message)['text']) . ($mailobj->attachment>0 ? $this->get_files_str($mailobj->id, $mailobj->userid) : '') . '</div>';
+                unset($mailobj->mailid);
+                #       $nestedarr[] = $assignmentinstance->get_nested_reply_object($mailobj);
+                $nestedobj = $this->get_nested_reply_object($mailobj);
+
+                if ($nestedobj) {
+                    $mailobj->id = $nestedobj->id;
+                    $mailobj->subject = $nestedobj->subject;
+                    $mailobj->timesent = $nestedobj->timesent;
+                    $mailobj->sender = $nestedobj->sender;
+                    $mailobj->message = $nestedobj->message;
+                }
+
+                $select = 'parent = ' . $mailobj->id . ' AND userid = ' . $userid . ' AND assignment = ' . $this->cm->instance;
+                $mailobj->studentreplys = $DB->get_records_select('assignsubmission_mail_mail', $select);
+
+                if ($mailobj->studentreplys) {
+                    $tmp = array();
+                    $mailobj->studentreplys = $this->get_recursive_replies($mailobj->studentreplys, $tmp, $userid);
+                }
+
+                $maxweight += $mailobj->weight;
+                $totalgained += ( $mailobj->gainedweight * $mailobj->weight);
+            }
+        }
+
+        $show = get_string('show') . ' ' . get_string('teacherid', 'assignsubmission_mailsimulator');
+        $hide = get_string('hide') . ' ' . get_string('teacherid', 'assignsubmission_mailsimulator');
+
+        if(!$teacher) {
+            //print_heading(get_string('extendedfeedback', 'assignment_mailsimulator'));
+        }
+        echo '<script language="javascript">';
+        echo 'function toggle(showHideDiv, switchText) {';
+        echo '  var ele = document.getElementById(showHideDiv);';
+        echo '  var text = document.getElementById(switchText);';
+        echo '  if(ele.style.display == "block") {';
+        echo '      ele.style.display = "none";';
+        echo '      text.innerHTML = "' . $show . '";';
+        echo '  }';
+        echo '  else {';
+        echo '      ele.style.display = "block";';
+        echo '      text.innerHTML = "' . $hide . '";';
+        echo '  }';
+        echo '}';
+        echo '</script>';
+
+        if ($teacher) {
+            //print_simple_box_start('center', '', '', '', 'generalbox', 'dates');
+            echo '<table>';
+            if ($this->assigninstance->timedue) {
+                echo '  <tr>';
+                echo '      <td class="c0">' . get_string('duedate', 'assign') . ':</td>';
+                echo '      <td class="c1">' . userdate($this->assigninstance->timedue) . '</td>';
+                echo '  </tr>';
+            }
+
+            echo '  <tr>';
+            echo '      <td class="c0">' . get_string('lastmodified') . ' (' . $this->course->student . '):</td>';
+            echo '      <td class="c1">' . userdate($submission->timemodified) . '</td>';
+            echo '  </tr>';
+            echo '  <tr>';
+            echo '      <td class="c0" style="padding-right: 15px;">' . get_string('lastmodified') . ' (' . $this->course->teacher . '):</td>';
+            echo '      <td class="c1">' . userdate($submission->timemarked) . '</td>';
+            echo '  </tr>';
+            echo '  <tr>';
+            echo '      <td class="c0">' . get_string('weight_maxweight', 'assignsubmission_mailsimulator') . ':';
+            echo $OUTPUT->help_icon('weight', 'assignsubmission_mailsimulator');
+            echo '      </td>';
+            echo '      <td class="c1">' . $totalgained . ' / ' . $maxweight * 2 . '</td>';
+            echo '  </tr>';
+            echo '</table>';
+            //print_simple_box_end();
+        }
+
+        //print_simple_box_start('center');
+
+        if ($teacher) {
+            echo '<form name="input" action="' . $CFG->wwwroot . '/mod/assign/submission/type/mailsimulator/file.php?id=' . $this->cm->id . '&userid=' . $userid . '" method="post">';
+        }
+        if ($signedoutarr) {
+            print_heading(get_string('studentreplies', 'assignsubmission_mailsimulator'));
+
+            $toggleid = 0;
+
+            foreach ($signedoutarr as $signedoutid => $mobj) {
+
+                $toggleid++;
+                $multiplier = $mobj->gainedweight;
+
+                echo '<table style="border:1px solid; margin-bottom: 0px;" width=100%>';
+                echo '  <tr style="background:lightgrey">';
+                echo '      <td style="width:200px; padding-left:5px; white-space:nowrap;">' . format_text($mobj->subject) . ' </td>';
+                echo '      <td><p><a id="showhide' . $toggleid . '" href="javascript:toggle(\'teachermail' . $toggleid . '\',\'showhide' . $toggleid . '\');">' . $show . '</a></p></td>';
+
+                if ($teacher) {
+                    echo '<td style="text-align:right">';
+
+                    echo '<select name="gainedweight_' . $signedoutid . '" >';
+                    echo '  <option value="0" ' . (($multiplier == 0) ? 'selected' : '') . '>' . get_string('fail', 'assignsubmission_mailsimulator') . '</option>';
+                    echo '  <option value="1" ' . ($multiplier == 1 ? 'selected' : '') . '>' . get_string('ok') . '</option>';
+                    echo '  <option value="2" ' . ($multiplier == 2 ? 'selected' : '') . '>' . get_string('good', 'assignsubmission_mailsimulator') . '</option>';
+                    echo '</select> ';
+
+                    echo get_string('weight', 'assignsubmission_mailsimulator') . ': ' . $mobj->gainedweight * $mobj->weight . ' / ' . $mobj->weight * 2;
+                    echo $OUTPUT->help_icon('weight', 'assignsubmission_mailsimulator');
+                    echo '&nbsp; </td>';
+                }
+                echo '  </tr>';
+                echo '</table>';
+                echo '<div id="teachermail' . $toggleid . '" style="border:1px solid; border-top: 0px; padding: 5px; padding-bottom: 0px; background-color:#ffffff; display: none;">' . format_text($mobj->message, FORMAT_MOODLE) . '</div>'; ######
+
+                if ($mobj->studentreplys) {
+                    echo '<div style="padding: 5px; background:white; border-left:1px solid; border-right:1px solid">';
+                    foreach ($mobj->studentreplys as $reply) {
+                        echo format_text('<b>' . $reply->subject . '</b><br />' . unserialize($reply->message)['text']) . ($reply->attachment>0 ? $this->get_files_str($reply->id, $reply->userid) : '');
+                    }
+                    echo '</div>';
+                } else {
+                    //notify(get_string('noanswer', 'assignment_mailsimulator'), 'error', 'center');
+                }
+
+                if ($teacher) {
+                    echo '<div style="padding: 5px; background:white; color:green; border:1px solid black">' . format_text($mobj->correctiontemplate) . '</div>';
+                    echo '<label for="c' . $signedoutid . '">' . get_string('comment', 'assign') . ':</label>';
+                    echo '<input id="c' . $signedoutid . '" type="text" name="comment_' . $signedoutid . '" value="' . $mobj->comment . '" style="width: 100%;"><br /><br />';
+                } else {
+                    echo '<div style="padding: 5px; background:white; border:1px solid black"><p style="color:green;">' . get_string('comment', 'assign') . ':</p>' . $mobj->comment . '</div><br />';
+                }
+            }
+        } else {
+            echo get_string('noreplys') . '<br />';
+        }
+
+        if ($newmailarr) {
+            print_heading(get_string('newmail', 'assignsubmission_mailsimulator') . ':');
+
+            foreach ($newmailarr as $mid => $mobj) {
+                echo '<div style="padding-left: 5px; background:lightgrey; border:1px solid;">' . format_text($mobj->subject) . '</div>';
+                echo '<div style="padding: 5px; background:white; border-left:1px solid; border-right:1px solid; border-bottom:1px solid">';
+                echo format_text(unserialize($mobj->message)['text']) . ($mobj->attachment>0 ? $this->get_files_str($mobj->id, $mobj->userid) : '');
+                echo '</div><br />';
+            }
+//            } else {
+//                print_heading(get_string('nonewstudentmail', 'assignment_mailsimulator'));
+        }
+
+        if ($signedoutarr && $teacher) {
+            echo '<br />' . get_string('needcompletion', 'assignsubmission_mailsimulator') . ': ';
+            echo '<select name="completion" >';
+            echo '  <option value="2" >' . get_string('no') . '</option>';
+            echo '  <option value="3" >' . get_string('yes') . '</option>';
+            echo '</select> ';
+            echo '<br /><input type="submit" value="Submit" name="submit" />';
+        }
+        if ($teacher) {
+            echo '</form>';
+        }
+        //print_box_end();
+
+    }
+
+    function get_recursive_replies($arr, &$tmp, $userid) {
+        global $DB;
+
+        if (!$arr) {
+            return false;
+        }
+
+        foreach ($arr as $key => $value) {
+            $select = 'parent = ' . $key . ' AND userid = ' . $userid . ' AND assignment = ' . $this->cm->instance;
+            $rearr = $DB->get_records_select('assignsubmission_mail_mail', $select);
+
+            if ($rearr)
+                $this->get_recursive_replies($rearr, $tmp, $userid);
+
+            $tmp[$value->id] = $value;
+        }
+        return $tmp;
     }
 
 }

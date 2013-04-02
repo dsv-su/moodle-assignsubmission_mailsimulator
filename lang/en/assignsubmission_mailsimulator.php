@@ -65,7 +65,7 @@ $string['replyall_help'] = 'replyall help';
 $string['rating'] = 'Rating';
 $string['send'] = 'Send';
 $string['sent'] = 'Sent';
-$string['studentreplys'] = 'Student replys:';
+$string['studentreplies'] = 'Student replies:';
 $string['subject'] = 'Subject';
 
 $string['timemarked'] = 'TIMEMARKED';

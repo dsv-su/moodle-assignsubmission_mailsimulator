@@ -46,12 +46,6 @@ class assign_submission_mailsimulator extends assign_submission_plugin {
         $maxbytesdefault = $this->get_config('maxbytes');
         $teacherdefault = $this->get_config('teacherid');
 
-        var_dump($filesubmissionsdefault);
-        var_dump($mailnumberdefault);
-        var_dump($maxweightdefault);
-        var_dump($maxbytesdefault);
-        var_dump($teacherdefault);
-
         $mform->setDefault('assignsubmission_file_enabled', 0);
         $mform->setDefault('assignsubmission_blog_enabled', 0);
         $mform->setDefault('assignsubmission_online_enabled', 0);
@@ -101,10 +95,10 @@ class assign_submission_mailsimulator extends assign_submission_plugin {
 
         //Teacher mail
         $sql = 'SELECT distinct u.id AS uid, u.firstname, u.lastname, u.email ' .
-        'FROM {course} as c, {role_assignments} AS ra, {user} AS u, {context} AS ct ' .
-        'WHERE c.id = ct.instanceid AND ra.roleid =3 AND ra.userid = u.id ' .
-        #       'AND ct.id = ra.contextid '.
-        'AND c.id = ' . $COURSE->id;
+            'FROM {course} as c, {role_assignments} AS ra, {user} AS u, {context} AS ct ' .
+            'WHERE c.id = ct.instanceid AND ra.roleid =3 AND ra.userid = u.id ' .
+            #       'AND ct.id = ra.contextid '.
+            'AND c.id = ' . $COURSE->id;
         $records = $DB->get_records_sql($sql);
         if (!$records) {
             //error('This course does not have any teachers.');
@@ -151,7 +145,6 @@ class assign_submission_mailsimulator extends assign_submission_plugin {
      */
     public function get_form_elements($submission, MoodleQuickForm $mform, stdClass $data) {
         $cmid = required_param('id', PARAM_INT);
-        //var_dump($this);
         $mailboxurl = new moodle_url('/mod/assign/submission/mailsimulator/mailbox.php', array("id"=>$cmid));
         redirect($mailboxurl);
         return true;
@@ -166,8 +159,12 @@ class assign_submission_mailsimulator extends assign_submission_plugin {
      */
     public function view(stdClass $submission) {
         global $CFG, $DB, $OUTPUT;
-
-        return 'Here submission goes';
+        $cmid = required_param('id', PARAM_INT);
+        $sid = required_param('sid', PARAM_INT);
+        $gid = required_param('gid', PARAM_INT);
+        $userid = $DB->get_field('assign_submission', 'userid', array("id" => $sid));
+        redirect(new moodle_url('/mod/assign/submission/mailsimulator/file.php', array("id" => $cmid, "userid" => $userid)));
+        return true;
 
     }    
     
@@ -184,10 +181,15 @@ class assign_submission_mailsimulator extends assign_submission_plugin {
 
         $showviewlink = true;
 
-        $divclass = 'submissionstatussubmitted';
+        $divclass = 'submissionstatusdraft';
+        $mailssent = 0;
+        $userid = $submission->userid+0;
+        $mailssent = $DB->count_records('assignsubmission_mail_mail', array('sender' => $userid));
+        $weightgiven = 0;
 
         $result = html_writer::start_tag('div', array('class' => $divclass));
-        $result .= 'Submission summary';
+        $result .= 'Submission summary: <br> Mails sent: '. $mailssent .' <br> Weight given:' . $weightgiven;
+
         $result .= html_writer::end_tag('div');
 
         return $result;

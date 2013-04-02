@@ -13,13 +13,12 @@ $mid = optional_param('mid', 0, PARAM_INT);
 
 $cm     = get_coursemodule_from_id('assign', $id, 0, false, MUST_EXIST);
 $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
-
 $context = context_module::instance($cm->id);
 
 require_login($course);
 
 //$PAGE->set_url('/mod/assign/submission/mailsimulator/mail.php');
-$PAGE->set_title('New Mail');
+$PAGE->set_title('Edit mail');
 //$PAGE->set_pagelayout('standard');
 
 require_once($CFG->dirroot.'/mod/assign/submission/mailsimulator/mailbox_class.php');
@@ -29,7 +28,9 @@ echo $OUTPUT->header();
 
 $teacher = has_capability('mod/assign:grade', context_module::instance($cm->id));
 
-$mailboxinstance->print_tabs('addmail');
+if ($teacher) {
+    $mailboxinstance->print_tabs('addmail');
+}
 
 if ($mid) {
     if (!$teacher) {echo 'Go away!';}
@@ -42,7 +43,7 @@ if ($mid) {
         //error("You are not allowed to edit this mail.", $CFG->wwwroot . '/mod/assignment/view.php?id=' . $cm->id);
     }
 
-    //$teacherid = $DB->get_field('assignment', 'var3', 'id', $assignmentinstance->assignment->id);
+    $teacherid = $mailboxinstance->get_config('teacherid');
     $contacts = $DB->get_records('assignsubmission_mail_cntct', array('assignment' => $cm->instance));
     $senttoobjarr = $DB->get_records('assignsubmission_mail_to', array('mailid' => $mid), 'contactid');
     $sendtoarr = array();
@@ -51,7 +52,7 @@ if ($mid) {
         $sendtoarr[$value->contactid] = $value->contactid;
     }
 
-    //$teacherobj = $DB->get_record('user', array('id' => $teacherid), 'firstname, lastname, email');
+    $teacherobj = $DB->get_record('user', array('id' => $teacherid), 'firstname, lastname, email');
 
     if ($contacts) {
         foreach ($contacts as $key => $con) {
@@ -59,7 +60,7 @@ if ($mid) {
         }
     }
 
-    //$contacts[0] = $teacherobj->firstname . ' ' . $teacherobj->lastname . ' &lt;' . $teacherobj->email . '&gt;';
+    $contacts[0] = $teacherobj->firstname . ' ' . $teacherobj->lastname . ' &lt;' . $teacherobj->email . '&gt;';
     $contacts[TO_STUDENT_ID] = get_string('mailtostudent', 'assignsubmission_mailsimulator');
     asort($contacts);
 
@@ -125,7 +126,7 @@ echo '                      <td style="background-color:lightgray;">' . $mailstr
 
 $customdata->reply = $re;
 
-$fileoptions = array('subdirs' => 0, 'maxbytes' => get_config('assignsubmission_mailsimulator')->maxbytes, 'maxfiles' => get_config('assignsubmission_mailsimulator')->maxfilesubmissions, 'accepted_types' => '*' );
+$fileoptions = array('subdirs' => 0, 'maxbytes' => $mailboxinstance->get_config('maxbytes'), 'maxfiles' => $mailboxinstance->get_config('mailnumber'), 'accepted_types' => '*' );
 $customdata->fileoptions = $fileoptions;
 
 require_once($CFG->dirroot.'/mod/assign/submission/mailsimulator/mail_form.php');
@@ -170,7 +171,7 @@ if ($mailform->is_cancelled()) {
         }
 
         file_save_draft_area_files($fromform->attachment, $context->id, 'assignsubmission_mailsimulator', 'attachment',
-                   $currentmailid, array('subdirs' => 0, 'maxbytes' => $maxbytes, 'maxfiles' => 5));
+                   $currentmailid, $fileoptions);
 
         redirect($CFG->wwwroot . '/mod/assign/submission/mailsimulator/mailbox.php?id=' . $cm->id, '', 0);
     }

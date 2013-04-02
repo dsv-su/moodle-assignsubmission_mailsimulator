@@ -18,7 +18,11 @@ require_login($course);
 require_once($CFG->dirroot.'/mod/assign/submission/mailsimulator/mailbox_class.php');
 $mailboxinstance = new mailbox($context, $cm, $course);
 
+$PAGE->set_title('Edit template');
+
 //$mailstr = 'NO MAIL IN URL<br>';
+
+echo $OUTPUT->header();
 
 if ($mid) {
     // Check if mail exists. A template must have a mail.
@@ -44,8 +48,6 @@ if ($existingparent = $DB->get_record("assignsubmission_mail_tmplt", array("mail
     $existingparent->randgroup = $customdata->randgroup;
     $customdata = $existingparent;
 }
-
-echo $OUTPUT->header();
 
 echo $mailstr;
 
