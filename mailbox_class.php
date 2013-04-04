@@ -73,7 +73,35 @@ class mailbox {
     }
 
     function check_assignment_setup() {
-        global $CFG, $DB;    
+        global $CFG, $DB;   
+
+        $mailgroupnumber = $this->get_config('mailnumber');
+
+        // Count how many mailgroups this assignment has.
+        $sql = 'SELECT count(DISTINCT tm.randgroup)
+                FROM {assignsubmission_mail_tmplt} AS tm
+                LEFT JOIN {assignsubmission_mail_mail} AS m ON m.id = tm.mailid
+                WHERE m.assignment = ' . $this->cm->instance . '
+                AND m.userid = 0
+                AND tm.deleted = 0
+                AND tm.randgroup != 0';
+
+        $mailgroupcount = $DB->count_records_sql($sql);
+
+        if ($mailgroupnumber > $mailgroupcount) {
+            //Prevent display if the assignment is not configured
+            if (!has_capability('mod/assign:grade', context_module::instance($this->cm->id)))
+                error('Assignment needs to be setup correctly, contact your teacher');
+
+            /// ADD NEW MAIL
+            if (!$DB->record_exists('assignsubmission_mail_cntct', array('assignment' => $this->cm->instance))) {
+                $this->add_contacts();
+            }
+            $this->add_mail();
+        } elseif ($mailgroupnumber < $mailgroupcount) {
+            $this->assigntinstance->set_config('mailnumber', $mailgroupcount);
+            //set_field('assignment', 'var1', $mailgroupcount, 'id', $this->assignment->id);
+        } 
 
         // All Teacher Mail Parents must have a Parent 
         $sql = 'SELECT id
@@ -90,7 +118,7 @@ class mailbox {
 
             if (!$parentexists) {
                 $gid=0;
-                $this->add_parent($id);
+                $this->add_template($id);
             }
         }
     }
@@ -160,7 +188,7 @@ class mailbox {
             $groupid = $DB->get_field('assignsubmission_mail_tmplt', 'randgroup', array('mailid' => $mailobj->id));
 
             if ($groupid == 0) {
-                $this->add_parent($mailobj->id, $this->calculate_group());
+                $this->add_template($mailobj->id, $this->calculate_group());
             }
 
         $editingteacher = has_capability('mod/assign:grade', $this->context);
@@ -467,12 +495,25 @@ class mailbox {
         return $prio;
     }
 
-    function add_parent($mailid=0, $gid=0) {
+    function add_template($mailid=0, $gid=0) {
         global $CFG;
 
         if ($mailid) {
-            redirect($CFG->wwwroot . '/mod/assign/submission/mailsimulator/template.php?id=' . $this->cm->id . '&mid=' . $mailid . '&gid=' . $gid, 'ADD PARENT ', 0);
+            redirect($CFG->wwwroot . '/mod/assign/submission/mailsimulator/template.php?id=' . $this->cm->id . '&mid=' . $mailid . '&gid=' . $gid, 'Add a template ', 0);
         }
+    }
+
+    function add_contacts() {
+        global $CFG;
+
+        redirect($CFG->wwwroot . '/mod/assign/submission/mailsimulator/contacts.php?id=' . $this->cm->id, 'Add a contact', 0);
+    }
+
+    function add_mail($tid=0, $gid=0) {
+        global $CFG;
+
+        //$re = optional_param('re', 0, PARAM_INT);         // Reply 1=one, 2=all
+        redirect($CFG->wwwroot . '/mod/assign/submission/mailsimulator/mail.php?id=' . $this->cm->id . '&tid=' . $tid . '&gid=' . $gid . '&re=' . $re, 'Add a mail', 0);
     }
 
     function calculate_group() {
@@ -834,7 +875,7 @@ class mailbox {
             }
             */
             if ($mail->parent == 0) {
-                $this->add_parent($mailid, $gid);
+                $this->add_template($mailid, $gid);
             } else {
                 if (!has_capability('mod/assign:grade', context_module::instance($this->cm->id))) {
 
@@ -1274,7 +1315,11 @@ class mailbox {
     }
 
     function view_grading_feedback($userid=null) {
-        global $CFG, $DB, $OUTPUT;
+        global $CFG, $DB, $OUTPUT, $USER, $COURSE;
+
+        if (!$user = $DB->get_record("user", array("id" => $userid))) {
+            error("User is misconfigured");
+        }
 
         $submission = $this->user_have_registered_submission($userid, $this->cm->instance);
 
@@ -1282,6 +1327,36 @@ class mailbox {
 
         if ($teacher) {
             // update grade/weight
+            if (isset($_POST['submit'])) {
+                //$submission->data1 = $_POST['completion'];
+                unset($_POST['submit']);
+                unset($_POST['completion']);
+
+                foreach ($_POST as $key => $value) {
+                    $obj = new stdClass();
+                    $karr = explode('_', $key);
+
+                    if ($karr[0] == 'gainedweight') {
+                        $obj->id = $karr[1];
+                        $obj->$karr[0] = $value;
+                        $sarr[$karr[1]] = $obj;
+                    }
+
+                    $sarr[$karr[1]]->$karr[0] = $value;
+                }
+
+                foreach ($sarr as $dataobject) {
+                    $DB->update_record('assignsubmission_mail_sgndml', $dataobject);
+                }
+
+                //$submission->timemarked = time();
+                //$submission->teacher = $USER->id;
+                //$DB->update_record('assign_submission', $submission);
+
+                echo '<script language="javascript" type="text/javascript">';
+                echo '  window.opener.location.reload(true);window.close();';
+                echo '</script>';
+            }
         }
 
         // mails that have been signed out to user
@@ -1355,11 +1430,11 @@ class mailbox {
             }
 
             echo '  <tr>';
-            echo '      <td class="c0">' . get_string('lastmodified') . ' (' . $this->course->student . '):</td>';
+            echo '      <td class="c0">' . get_string('lastmodified') . ' (' . get_string('student', 'grades') . '):</td>';
             echo '      <td class="c1">' . userdate($submission->timemodified) . '</td>';
             echo '  </tr>';
             echo '  <tr>';
-            echo '      <td class="c0" style="padding-right: 15px;">' . get_string('lastmodified') . ' (' . $this->course->teacher . '):</td>';
+            echo '      <td class="c0" style="padding-right: 15px;">' . get_string('lastmodified') . ' (' . get_string('defaultcourseteacher'). '):</td>';
             echo '      <td class="c1">' . userdate($submission->timemarked) . '</td>';
             echo '  </tr>';
             echo '  <tr>';
@@ -1375,7 +1450,7 @@ class mailbox {
         //print_simple_box_start('center');
 
         if ($teacher) {
-            echo '<form name="input" action="' . $CFG->wwwroot . '/mod/assign/submission/type/mailsimulator/file.php?id=' . $this->cm->id . '&userid=' . $userid . '" method="post">';
+            echo '<form name="input" action="' . $CFG->wwwroot . '/mod/assign/submission/mailsimulator/file.php?id=' . $this->cm->id . '&userid=' . $userid . '" method="post">';
         }
         if ($signedoutarr) {
             print_heading(get_string('studentreplies', 'assignsubmission_mailsimulator'));
@@ -1422,9 +1497,9 @@ class mailbox {
                 if ($teacher) {
                     echo '<div style="padding: 5px; background:white; color:green; border:1px solid black">' . format_text($mobj->correctiontemplate) . '</div>';
                     echo '<label for="c' . $signedoutid . '">' . get_string('comment', 'assign') . ':</label>';
-                    echo '<input id="c' . $signedoutid . '" type="text" name="comment_' . $signedoutid . '" value="' . $mobj->comment . '" style="width: 100%;"><br /><br />';
+                    echo '<input id="c' . $signedoutid . '" type="text" name="feedback_' . $signedoutid . '" value="' . $mobj->feedback . '" style="width: 100%;"><br /><br />';
                 } else {
-                    echo '<div style="padding: 5px; background:white; border:1px solid black"><p style="color:green;">' . get_string('comment', 'assign') . ':</p>' . $mobj->comment . '</div><br />';
+                    echo '<div style="padding: 5px; background:white; border:1px solid black"><p style="color:green;">' . get_string('comment', 'assign') . ':</p>' . $mobj->feedback . '</div><br />';
                 }
             }
         } else {
@@ -1443,7 +1518,7 @@ class mailbox {
 //            } else {
 //                print_heading(get_string('nonewstudentmail', 'assignment_mailsimulator'));
         }
-
+/*
         if ($signedoutarr && $teacher) {
             echo '<br />' . get_string('needcompletion', 'assignsubmission_mailsimulator') . ': ';
             echo '<select name="completion" >';
@@ -1452,6 +1527,7 @@ class mailbox {
             echo '</select> ';
             echo '<br /><input type="submit" value="Submit" name="submit" />';
         }
+*/
         if ($teacher) {
             echo '</form>';
         }

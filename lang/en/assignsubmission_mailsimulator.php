@@ -1,9 +1,9 @@
 <?php
 /**
- * Strings for component 'assignsubmission_blog', language 'en'
+ * Strings for component 'assignsubmission_mailsimulator', language 'en'
  *
- * @package assignsubmission_blog
- * @copyright 2012 Department of Computer and System Sciences,
+ * @package assignsubmission_mailsimulator
+ * @copyright 2013 Department of Computer and System Sciences,
  *					Stockholm University  {@link http://dsv.su.se}
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -16,7 +16,7 @@ $string['addonecontact'] = 'You need to add at least one contact.';
 $string['allsubmissions'] = 'All submissions';
 $string['alternative'] = 'Alternative';
 $string['comment'] = 'Comment';
-$string['confirmdelete'] = 'Are you shure you whant to delete this mail and attachments?';
+$string['confirmdelete'] = 'Are you shure you want to delete this mail and attachments?';
 $string['contactinuse'] = 'This contact is in use and can therefore not be deleted.';
 $string['contact'] = 'Contact';
 $string['correctiontemplate'] = 'Correction Template';

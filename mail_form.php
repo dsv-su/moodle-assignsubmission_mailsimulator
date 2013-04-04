@@ -166,11 +166,10 @@ class mail_form extends moodleform {
         }
 
         $mform->setDefault('message', $this->_customdata->message);
-
         // Here upload of the files goes!
-       // if (((!isset($this->_customdata->inactive) || $this->_customdata->inactive) && $this->_customdata->file_types_str)) {
+        if (((!isset($this->_customdata->inactive) || $this->_customdata->inactive) && ($this->_customdata->attachmentenabled))) {
             $mform->addElement('filemanager', 'attachment', get_string('attachment', 'forum'), null, $this->_customdata->fileoptions);
-       // }
+        }
 
         $this->add_action_buttons(true, 'Submit');
     }

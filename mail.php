@@ -72,7 +72,6 @@ if ($mid) {
 
     $top = $mailboxinstance->get_top_parent_id($mid);
     $inactive = !$mailboxinstance->get_signed_out_status($top);
-
     $customdata->inactive = $inactive;
 
     unset($customdata->id);
@@ -126,8 +125,11 @@ echo '                      <td style="background-color:lightgray;">' . $mailstr
 
 $customdata->reply = $re;
 
-$fileoptions = array('subdirs' => 0, 'maxbytes' => $mailboxinstance->get_config('maxbytes'), 'maxfiles' => $mailboxinstance->get_config('mailnumber'), 'accepted_types' => '*' );
+//Temp value here (5)!
+$fileoptions = array('subdirs' => 0, 'maxbytes' => $mailboxinstance->get_config('maxbytes'), 'maxfiles' => 5, 'accepted_types' => '*' );
 $customdata->fileoptions = $fileoptions;
+$attachmentenabled = $mailboxinstance->get_config('filesubmissions');
+$customdata->attachmentenabled = $attachmentenabled;
 
 require_once($CFG->dirroot.'/mod/assign/submission/mailsimulator/mail_form.php');
 //Instantiate simplehtml_form 
@@ -170,8 +172,10 @@ if ($mailform->is_cancelled()) {
           $currentmailid = $mailboxinstance->insert_mail($fromform, $gid);
         }
 
+        if ($attachmentenabled) {
         file_save_draft_area_files($fromform->attachment, $context->id, 'assignsubmission_mailsimulator', 'attachment',
                    $currentmailid, $fileoptions);
+        }
 
         redirect($CFG->wwwroot . '/mod/assign/submission/mailsimulator/mailbox.php?id=' . $cm->id, '', 0);
     }

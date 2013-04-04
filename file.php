@@ -2,7 +2,7 @@
 
 require_once(dirname(__FILE__).'/../../../../config.php');
 
-global $CFG, $DB, $PAGE;
+global $CFG, $DB, $PAGE, $USER;
 
 $id = required_param('id', PARAM_INT);          // Course Module ID
 $userid = required_param('userid', PARAM_INT);  // User ID
@@ -34,35 +34,27 @@ if (!$user = get_record("user", "id", $userid)) {
 */
 
 $teacher = has_capability('mod/assign:grade', $context);
+require_once($CFG->dirroot.'/mod/assign/submission/mailsimulator/mailbox_class.php');
+$mailboxinstance = new mailbox($context, $cm, $course);
 
-/*
-if (!$teacher && ($USER->id != $user->id)) {
+if (!$teacher && ($USER->id != $userid)) {
     error("You can not view this assignment");
 }
 
-if ($assignment->assignmenttype != 'mailsimulator') {
+if (!$mailboxinstance->get_config('enabled')) {
     error("Incorrect assignment type");
 }
-*/
 
 echo $OUTPUT->header();
 
-require_once($CFG->dirroot.'/mod/assign/submission/mailsimulator/mailbox_class.php');
-$mailboxinstance = new mailbox($context, $cm, $course);
 $assignmentinstanceid = $cm->instance + 0;
 $submission = $mailboxinstance->user_have_registered_submission($userid, $assignmentinstanceid);
 
 if ($submission) {
     $mailboxinstance->view_grading_feedback($userid);
+} else {
+    error("User doesn't have any active submission");
 }
-
-/*
-$assignmentinstance = new assignment_mailsimulator($cm->id, $assignment, $cm, $course);
-print_header(fullname($user, true) . ': ' . $assignmentinstance->assignment->name);
-$assignmentinstance->view_grading_feedback($userid);
-close_window_button();
-print_footer('none');
-*/
 
 echo html_writer::tag('div', html_writer::link('../../view.php?id=' . $cm->id . '&action=grading', 'Back to grading page'), array('align'=>'center'));
 

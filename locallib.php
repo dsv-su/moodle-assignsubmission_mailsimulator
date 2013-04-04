@@ -180,16 +180,29 @@ class assign_submission_mailsimulator extends assign_submission_plugin {
         global $DB;
 
         $showviewlink = true;
+        $cmid = required_param('id', PARAM_INT);
+        $cm = get_coursemodule_from_id('assign', $cmid, 0, false, MUST_EXIST);
 
-        $divclass = 'submissionstatusdraft';
-        $mailssent = 0;
+        //$divclass = 'submissionstatusdraft';
         $userid = $submission->userid+0;
-        $mailssent = $DB->count_records('assignsubmission_mail_mail', array('sender' => $userid));
-        $weightgiven = 0;
+        $mailssent = $DB->count_records('assignsubmission_mail_mail', array('userid' => $userid));
+    
+        $sql = 'SELECT sm.id, sm.mailid, t.weight, sm.gainedweight, sm.feedback, m.sender, m.subject, m.message, t.correctiontemplate, m.timesent, m.priority, m.attachment, m.userid
+        FROM {assignsubmission_mail_sgndml} AS sm
+        LEFT JOIN {assignsubmission_mail_tmplt} AS t ON sm.mailid = t.mailid
+        LEFT JOIN {assignsubmission_mail_mail} AS m ON m.id = sm.mailid
+        WHERE sm.userid = ' . $userid . '
+        AND m.assignment = ' . $cm->instance;
+
+        $usermails = $DB->get_records_sql($sql);
+
+        foreach ($usermails as $mailobj) {
+            $maxweight += $mailobj->weight;
+            $weightgiven += ( $mailobj->gainedweight * $mailobj->weight);
+        }
 
         $result = html_writer::start_tag('div', array('class' => $divclass));
-        $result .= 'Submission summary: <br> Mails sent: '. $mailssent .' <br> Weight given:' . $weightgiven;
-
+        $result .= 'Mails sent: '. $mailssent .' <br> Weight given:' . $weightgiven;
         $result .= html_writer::end_tag('div');
 
         return $result;
