@@ -319,6 +319,7 @@ class mailbox {
             echo '                  <td style="padding:0; margin:0;">';
             if($editingteacher) {
                 //Confirm is needed here!!!
+                //Make this button unclickable when the mail is active!!!
                 print_single_button($CFG->wwwroot . '/mod/assign/submission/mailsimulator/mailbox.php', array('id' => $this->cm->id, 'mid' => $tid, 'delete' => 1), get_string('delete'));
             }
             echo '                  </td>';
@@ -441,7 +442,7 @@ class mailbox {
     function delete_mail_and_children($mailid) {
         global $DB;
 
-        //$this->delete_mail($mailid);
+        $this->delete_mail($mailid);
 
         $cid = $DB->get_field('assignsubmission_mail_mail', 'id', array('parent' => $mailid));
 
@@ -453,42 +454,19 @@ class mailbox {
         }
     }
 
-
-//TO BE DONE
     function delete_mail($mailid) {
         global $CFG, $DB;
 
-        $userid = 0;
-        $dir = $this->file_area_name($userid) . '/' . $mailid;
-        $filepath = $CFG->dataroot . '/' . $dir;
-
-        // Remove attachments
-        $this->delete_dir_recursively($filepath);
-
-        delete_records('assignment_mailsimulation_to', 'mailid', $mailid);
-        delete_records('assignment_mailsimulation_parent_mail', 'mailid', $mailid);
-        delete_records('assignment_mailsimulation_mail', 'id', $mailid);
-    }
-
-    function delete_dir_recursively($dir) {
-        if (is_dir($dir)) {
-            $objects = scandir($dir);
-
-            foreach ($objects as $object) {
-                if ($object != "." && $object != "..") {
-                    if (filetype($dir . '/' . $object) == 'dir') {
-                        $this->delete_dir_recursively($dir . '/' . $object);
-                    } else {
-                        unlink($dir . "/" . $object);
-                    }
-                }
-            }
-            reset($objects);
-            rmdir($dir);
+        $fs = get_file_storage();
+        $files = $fs->get_area_files($this->context->id, 'assignsubmission_mailsimulator', 'attachment', $mailid);
+        foreach ($files as $file) {
+            $file->delete();
         }
+
+        $DB->delete_records('assignsubmission_mail_to', array('mailid' => $mailid));
+        $DB->delete_records('assignsubmission_mail_tmplt', array('mailid' => $mailid));
+        $DB->delete_records('assignsubmission_mail_mail', array('id' => $mailid));
     }
-
-
 
     function handle_trash($mailid, $delete=true) {
         global $DB;
@@ -1346,6 +1324,9 @@ class mailbox {
         if (!$user = $DB->get_record("user", array("id" => $userid))) {
             error("User is misconfigured");
         }
+        
+        $sid = optional_param('sid', $submission->id, PARAM_INT);
+        $gid = optional_param('gid', 0, PARAM_INT);
 
         $submission = $this->user_have_registered_submission($userid, $this->cm->instance);
 
@@ -1476,10 +1457,15 @@ class mailbox {
         //print_simple_box_start('center');
 
         if ($teacher) {
-            echo '<form name="input" action="' . $CFG->wwwroot . '/mod/assign/submission/mailsimulator/file.php?id=' . $this->cm->id . '&userid=' . $userid . '" method="post">';
+            //echo '<form name="input" action="' . $CFG->wwwroot . '/mod/assign/submission/mailsimulator/file.php?id=' . $this->cm->id . '&userid=' . $userid . '" method="post">';
+            echo '<form name="input" action="' . $CFG->wwwroot . '/mod/assign/view.php?id='.$this->cm->id.'&sid='.$sid.'&gid='.$gid.'&plugin=mailsimulator&action=viewpluginassignsubmission&returnaction=grading&returnparams=" method="post">';
         }
         if ($signedoutarr) {
-            print_heading(get_string('studentreplies', 'assignsubmission_mailsimulator'));
+            if ($teacher) {
+                print_heading(get_string('studentreplies', 'assignsubmission_mailsimulator'));
+            } else {
+                print_heading(get_string('studentrepliesstudent', 'assignsubmission_mailsimulator'));
+            }
 
             $toggleid = 0;
 
@@ -1550,10 +1536,10 @@ class mailbox {
             echo '<select name="completion" >';
             echo '  <option value="2" >' . get_string('no') . '</option>';
             echo '  <option value="3" >' . get_string('yes') . '</option>';
-            echo '</select> ';
-            echo '<br /><input type="submit" value="Submit" name="submit" />';
-        }
-*/
+           echo '</select> ';
+*/            echo '<br /><input type="submit" value="Submit" name="submit" />';
+ //       }
+
         if ($teacher) {
             echo '</form>';
         }

@@ -66,6 +66,7 @@ $string['rating'] = 'Rating';
 $string['send'] = 'Send';
 $string['sent'] = 'Sent';
 $string['studentreplies'] = 'Student replies:';
+$string['studentrepliesstudent'] = 'Your replies:';
 $string['subject'] = 'Subject';
 
 $string['timemarked'] = 'TIMEMARKED';

@@ -27,13 +27,7 @@ $PAGE->set_cm($cm);
 require_once($CFG->dirroot.'/mod/assign/submission/mailsimulator/mailbox_class.php');
 $mailboxinstance = new mailbox($context, $cm, $course);
 
-echo $OUTPUT->header();
-
 $teacher = has_capability('mod/assign:grade', context_module::instance($cm->id));
-
-if ($teacher) {
-    $mailboxinstance->print_tabs('addmail');
-}
 
 if ($mid) {
     if (!$teacher) {echo 'Go away!';}
@@ -102,6 +96,24 @@ if ($tid) { // If a student replies to or forward a mail
     }
 }
 
+$customdata->reply = $re;
+
+//Temp value here (5)!
+$fileoptions = array('subdirs' => 0, 'maxbytes' => $mailboxinstance->get_config('maxbytes'), 'maxfiles' => 5, 'accepted_types' => '*' );
+$customdata->fileoptions = $fileoptions;
+$attachmentenabled = $mailboxinstance->get_config('filesubmissions');
+$customdata->attachmentenabled = $attachmentenabled;
+
+require_once($CFG->dirroot.'/mod/assign/submission/mailsimulator/mail_form.php');
+//Instantiate simplehtml_form 
+$mailform = new mail_form('?gid=' . $gid, $customdata);
+
+echo $OUTPUT->header();
+
+if ($teacher) {
+    $mailboxinstance->print_tabs('addmail');
+}
+
 $imgurl = $CFG->wwwroot . '/mod/assign/submission/mailsimulator/pix/';
 
 echo '<div style="width:80%; margin: auto">';
@@ -125,18 +137,6 @@ echo '          <td >';
 echo '              <table class="mailmidletable" width="100%" style="margin-bottom:0em;">';
 echo '                  <tr>';
 echo '                      <td style="background-color:lightgray;">' . $mailstr;
-
-$customdata->reply = $re;
-
-//Temp value here (5)!
-$fileoptions = array('subdirs' => 0, 'maxbytes' => $mailboxinstance->get_config('maxbytes'), 'maxfiles' => 5, 'accepted_types' => '*' );
-$customdata->fileoptions = $fileoptions;
-$attachmentenabled = $mailboxinstance->get_config('filesubmissions');
-$customdata->attachmentenabled = $attachmentenabled;
-
-require_once($CFG->dirroot.'/mod/assign/submission/mailsimulator/mail_form.php');
-//Instantiate simplehtml_form 
-$mailform = new mail_form('?gid=' . $gid, $customdata);
 
 $draftitemid = file_get_submitted_draft_itemid('attachment');
 file_prepare_draft_area($draftitemid, $context->id, 'assignsubmission_mailsimulator', 'attachment', empty($customdata->mailid)?null:$customdata->mailid, $fileoptions);

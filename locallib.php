@@ -159,13 +159,26 @@ class assign_submission_mailsimulator extends assign_submission_plugin {
      */
     public function view(stdClass $submission) {
         global $CFG, $DB, $OUTPUT;
-        $cmid = required_param('id', PARAM_INT);
-        $sid = required_param('sid', PARAM_INT);
-        $gid = required_param('gid', PARAM_INT);
-        $userid = $DB->get_field('assign_submission', 'userid', array("id" => $sid));
-        redirect(new moodle_url('/mod/assign/submission/mailsimulator/file.php', array("id" => $cmid, "userid" => $userid)));
-        return true;
 
+        $id         = required_param('id', PARAM_INT);          // Course Module ID
+        $sid        = optional_param('sid', $submission->id, PARAM_INT);
+        $gid        = optional_param('gid', 0, PARAM_INT);
+        $userid     = $DB->get_field('assign_submission', 'userid', array("id" => $sid));
+        $cm         = get_coursemodule_from_id('assign', $id, 0, false, MUST_EXIST);
+        $course     = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
+        $context    = context_module::instance($cm->id);
+        require_once($CFG->dirroot.'/mod/assign/submission/mailsimulator/mailbox_class.php');
+        $mailboxinstance = new mailbox($context, $cm, $course);
+
+        ob_start();
+        if ($submission) {
+            $mailboxinstance->view_grading_feedback($userid);
+        } else {
+            error("User doesn't have any active submission");
+        }
+        $o = ob_get_contents();
+        ob_end_clean();
+        return $o;
     }    
     
     /**
@@ -217,6 +230,18 @@ class assign_submission_mailsimulator extends assign_submission_plugin {
      */
     public function get_files(stdClass $submission) {
         global $DB, $CFG;
+    }
+
+    /**
+     * No text is set for this plugin
+     *
+     * @param stdClass $submission
+     * @return bool
+     */
+    public function is_empty(stdClass $submission) {
+        global $DB;
+        $usermails = $DB->record_exists('assignsubmission_mail_mail', array('userid' => $submission->userid+0));
+        return empty($usermails);
     }
 
 }
