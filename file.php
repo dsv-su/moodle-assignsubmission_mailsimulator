@@ -6,14 +6,18 @@ global $CFG, $DB, $PAGE, $USER;
 
 $id = required_param('id', PARAM_INT);          // Course Module ID
 $userid = required_param('userid', PARAM_INT);  // User ID
-
 $cm     = get_coursemodule_from_id('assign', $id, 0, false, MUST_EXIST);
 $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
 $context = context_module::instance($cm->id);
 
 require_login($course);
 
+$PAGE->set_url('/mod/assign/submission/mailsimulator/file.php', array('id' => $id, 'userid' => $userid));
 $PAGE->set_title('Submission');
+$PAGE->set_pagelayout('standard');
+$PAGE->set_context($context);
+$PAGE->set_course($course);
+$PAGE->set_cm($cm);
 
 /*
 if (!$cm = get_coursemodule_from_id('assignment', $id)) {

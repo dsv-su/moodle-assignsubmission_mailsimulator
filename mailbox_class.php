@@ -99,7 +99,7 @@ class mailbox {
             }
             $this->add_mail();
         } elseif ($mailgroupnumber < $mailgroupcount) {
-            $this->assigntinstance->set_config('mailnumber', $mailgroupcount);
+            $this->plugininstance->set_config('mailnumber', $mailgroupcount);
             //set_field('assignment', 'var1', $mailgroupcount, 'id', $this->assignment->id);
         } 
 
@@ -231,13 +231,17 @@ class mailbox {
             } else {
                 $attachments = $mailobj->attachment>0 ? $this->get_files_str($mailobj->id, 0) : '';
                 $message = format_text(unserialize($mailobj->message)["text"], FORMAT_MOODLE);
-                $mailobj->message = '<div class="mailmessage">' . $attachments . $message . '</div>';
+                $mailobj->message = '<div class="mailmessage">' . $attachments . $message;
 
                 if($editingteacher) {
-                    $mailobj->message .= '<span style="text-align:right">' . print_single_button($CFG->wwwroot . 
-                        '/mod/assign/submission/mailsimulator/mail.php', array('id' => $this->cm->id, 'mid' => $mailobj->id), 
-                        get_string('edit'), 'get', '_self', true) . '</span>';
+                    //$mailobj->message .= '<span style="text-align:right">' . print_single_button($CFG->wwwroot . 
+                    //    '/mod/assign/submission/mailsimulator/mail.php', array('id' => $this->cm->id, 'mid' => $mailobj->id), 
+                    //    get_string('edit'), 'get', '_self', true) . '</span>';
+                    $link = new moodle_url($CFG->wwwroot .'/mod/assign/submission/mailsimulator/mail.php', array('id' => $this->cm->id, 'mid' => $mailobj->id));
+                    $mailobj->message .= '<div style="text-align:right">' . html_writer::link($link, get_string('edit')) . '</div>';      
                 }
+
+                $mailobj->message .= '</div>';
             }
 
             $p = $this->get_top_parent_id($mailobj->id);
@@ -314,7 +318,8 @@ class mailbox {
             echo '              <tr>';
             echo '                  <td style="padding:0; margin:0;">';
             if($editingteacher) {
-                //print_single_button($CFG->wwwroot . '/mod/assign/submission/mailsimulator/mailbox.php', array('id' => $this->cm->id, 'mid' => $tid, 'delete' => 1), get_string('delete'), 'get', '_self', false, '', $this->get_signed_out_status($tid), get_string('confirmdelete', 'assignsubmission_mailsimulator'));
+                //Confirm is needed here!!!
+                print_single_button($CFG->wwwroot . '/mod/assign/submission/mailsimulator/mailbox.php', array('id' => $this->cm->id, 'mid' => $tid, 'delete' => 1), get_string('delete'));
             }
             echo '                  </td>';
             echo '                  <td style="padding:0; margin:0;">';
@@ -359,8 +364,7 @@ class mailbox {
             echo '      </td>';
             echo '  </tr>';
             echo '</table>';
-
-            echo '<div>' . format_text($mailobj->message, FORMAT_MOODLE) . '</div>';
+            echo '<div>' . format_text($mailobj->message) . '</div>';
             //echo '<div>' . $mailobj->message . '</div>';
             echo '<div style="padding: 5px; color:green; background: white">' . format_text($mailobj->correctiontemplate, FORMAT_MOODLE) . '</div>';
             echo '<br />';
@@ -368,7 +372,7 @@ class mailbox {
             $group = $mailobj->randgroup;
         }
         echo '</div>';
-
+        echo '<br />';
     }
 
     function get_user_mails($userid=null, $forgrading=false) {
@@ -437,7 +441,7 @@ class mailbox {
     function delete_mail_and_children($mailid) {
         global $DB;
 
-        $this->delete_mail($mailid);
+        //$this->delete_mail($mailid);
 
         $cid = $DB->get_field('assignsubmission_mail_mail', 'id', array('parent' => $mailid));
 
@@ -446,9 +450,45 @@ class mailbox {
         } else {
             $mailcount = $this->get_config('mailnumber')-1;
             $this->plugininstance->set_config('mailnumber', $mailcount);
-            //NEEDS TO BE VERIFIED!
         }
     }
+
+
+//TO BE DONE
+    function delete_mail($mailid) {
+        global $CFG, $DB;
+
+        $userid = 0;
+        $dir = $this->file_area_name($userid) . '/' . $mailid;
+        $filepath = $CFG->dataroot . '/' . $dir;
+
+        // Remove attachments
+        $this->delete_dir_recursively($filepath);
+
+        delete_records('assignment_mailsimulation_to', 'mailid', $mailid);
+        delete_records('assignment_mailsimulation_parent_mail', 'mailid', $mailid);
+        delete_records('assignment_mailsimulation_mail', 'id', $mailid);
+    }
+
+    function delete_dir_recursively($dir) {
+        if (is_dir($dir)) {
+            $objects = scandir($dir);
+
+            foreach ($objects as $object) {
+                if ($object != "." && $object != "..") {
+                    if (filetype($dir . '/' . $object) == 'dir') {
+                        $this->delete_dir_recursively($dir . '/' . $object);
+                    } else {
+                        unlink($dir . "/" . $object);
+                    }
+                }
+            }
+            reset($objects);
+            rmdir($dir);
+        }
+    }
+
+
 
     function handle_trash($mailid, $delete=true) {
         global $DB;
@@ -698,7 +738,7 @@ class mailbox {
             $from = $this->get_sender_string($mailobj);
             $date = date('j M Y, H.i', $mailobj->timesent);
             $message .= '<br /><br/>' . $date . ' ' . get_string('wrote', 'assignsubmission_mailsimulator', $from) . ':';
-            $message .= '<div style="border-left: 2px outset #000000; padding: 5px; padding-bottom: 0px;">';    
+            $message .= '<div style="border-left: 2px outset #000000; padding: 5px; padding-bottom: 0px; padding-right: 0px;">';    
             $message .= $mailobj->attachment>0 ? $this->get_files_str($mailobj->id, 0) : '';
             $message .= format_text(unserialize($mailobj->message)['text'], FORMAT_MOODLE);
                 //$message .= ($mailobj->attachment ? $this->get_files_str($mailobj->id, $mailobj->userid) : '')
@@ -714,7 +754,7 @@ class mailbox {
     }
 
     function get_nested_reply_object($mailobj, $editbuttons=false) {
-        global $CFG, $DB;
+        global $CFG, $DB, $OUTPUT;
 
         $replies = false;
 
@@ -742,7 +782,7 @@ class mailbox {
             } else {
                 $from = $this->get_sender_string($m);
                 $replystr .= date('j F Y, H.i', $m->timesent) . ' ' . get_string('wrote', 'assignsubmission_mailsimulator', $from) . 
-                ':<br /><div style="border-left: 2px outset #000000; padding: 5px; padding-bottom: 0px;">';
+                ':<br /><div style="border-left: 2px outset #000000; padding: 5px; padding-bottom: 0px; padding-right: 0px;">';
             }
 
             //$replystr .= ( $m->attachment ? $this->get_files_str($m->id, $m->userid) : '') . format_text($m->message);
@@ -750,15 +790,22 @@ class mailbox {
             $replystr .= format_text(unserialize($m->message)['text'], FORMAT_MOODLE);
 
             if ($editbuttons) {
-                $replystr .= '<div style="text-align:right">' . 'FDFGDFGFD' . print_single_button($CFG->wwwroot . 
-                    '/mod/assign/submission/mailsimulator/mail.php', array('id' => $this->cm->id, 'mid' => $m->id), 
-                    get_string('edit'), 'get', '_self', true) . '</div>';
+                //ob_start();
+                //echo $OUTPUT->single_button('fgfgfg', get_string('edit'));
+                //$myStr = ob_get_contents();
+                //ob_end_clean();
+                //$replystr .= '<div style="text-align:right">' . print_single_button($CFG->wwwroot . 
+                  //  '/mod/assign/submission/mailsimulator/mail.php', array('id' => $this->cm->id, 'mid' => $m->id), 
+                    //get_string('edit'), 'get', '_self', true) . '</div>';
+                //$replystr .= $myStr;
+                $link = new moodle_url($CFG->wwwroot .'/mod/assign/submission/mailsimulator/mail.php', array('id' => $this->cm->id, 'mid' => $m->id));
+                $replystr .= '<div style="text-align:right">' . html_writer::link($link, get_string('edit')) . '</div>';
             }
-            /*if ($m->attachment == 1) {
+            if ($m->attachment == 1) {
                 $attachment = 1;
             }
-            */
-            //$mailobj->attachment = $m->attachment;
+            
+            $mailobj->attachment = $m->attachment;
             $divcount++;
         }
         for ($i = 0; $i < count($replys); $i++) {
@@ -850,46 +897,6 @@ class mailbox {
         return $firsttoname;
     }
 
-    // Creates a new mail and returns the id or false
-    function insert_mail($mail, $gid=0) {
-        global $CFG, $USER, $DB;
-
-        $mailid = $DB->insert_record('assignsubmission_mail_mail', $mail);
-
-        if ($mailid) {
-            foreach ($mail->to as $to) {
-                $obj = new stdClass();
-                $obj->contactid = $to;
-                $obj->mailid = $mailid;
-
-                $DB->insert_record('assignsubmission_mail_to', $obj);
-            }
-            /*
-            if ($this->upload_attachment($mailid, $mail->userid)) {
-
-                $fileobj = new stdClass();
-                $fileobj->id = $mailid;
-                $fileobj->attachment = 1;
-
-                $DB->update_record('assignsubmission_mail_mail', $fileobj);
-            }
-            */
-            if ($mail->parent == 0) {
-                $this->add_template($mailid, $gid);
-            } else {
-                if (!has_capability('mod/assign:grade', context_module::instance($this->cm->id))) {
-
-                    //$obj = $this->get_mail_status($mailid);
-                    //$this->set_mail_status($obj->mailid, 2);
-                }
-            }
-
-            return $mailid;
-        }
-
-        return false;
-    }
-
     function view_mailbox() {
         global $CFG, $USER;
 
@@ -958,7 +965,7 @@ class mailbox {
                 $link = $CFG->wwwroot . '/mod/assign/submission/mailsimulator/mailbox.php?id=' . $this->cm->id . '&mid=' . $m->id;
                 $attachment = false;
 
-                if ($m->attachment == 1) {
+                if ($m->attachment > 0) {
                     $attachment = true;
                 }
                 $mailheaders .= $this->mail_header($m, $link, $attachment);
@@ -1255,6 +1262,29 @@ class mailbox {
         return $DB->get_records('assignsubmission_mail_mail', array("userid" => $userid, "assignment" => $this->cm->instance), 'timesent DESC');
     }
 
+
+    // Creates a new mail and returns the id or false
+    function insert_mail($mail, $gid=0) {
+        global $CFG, $USER, $DB;
+
+        $mailid = $DB->insert_record('assignsubmission_mail_mail', $mail);
+
+        if ($mailid) {
+            foreach ($mail->to as $to) {
+                $obj = new stdClass();
+                $obj->contactid = $to;
+                $obj->mailid = $mailid;
+
+                $DB->insert_record('assignsubmission_mail_to', $obj);
+            }
+
+            return $mailid;
+        }
+
+        return false;
+    }
+
+
     function update_mail($mail) {
         global $DB;
 
@@ -1271,10 +1301,6 @@ class mailbox {
         $mail->id = $mail->mailid;
         unset($mail->mailid);
         unset($mail->MAX_FILE_SIZE);
-
-        //if ($this->upload_attachment($mail->id, $mail->userid)) {
-        //    $mail->attachment = 1;
-        //}
 
         $DB->update_record('assignsubmission_mail_mail', $mail);
     }

@@ -18,7 +18,12 @@ require_login($course);
 require_once($CFG->dirroot.'/mod/assign/submission/mailsimulator/mailbox_class.php');
 $mailboxinstance = new mailbox($context, $cm, $course);
 
+$PAGE->set_url('/mod/assign/submission/mailsimulator/template.php', array('id' => $id));
 $PAGE->set_title('Edit template');
+$PAGE->set_pagelayout('standard');
+$PAGE->set_context($context);
+$PAGE->set_course($course);
+$PAGE->set_cm($cm);
 
 //$mailstr = 'NO MAIL IN URL<br>';
 

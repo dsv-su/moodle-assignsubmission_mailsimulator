@@ -1,22 +1,23 @@
 <?php
 
 require_once(dirname(__FILE__).'/../../../../config.php');
-//require_once($CFG->dirroot.'/mod/assign/locallib.php');
 global $CFG, $DB, $PAGE, $COURSE;
 
 $id     = required_param('id', PARAM_INT);
 $cm     = get_coursemodule_from_id('assign', $id, 0, false, MUST_EXIST);
 $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
-
 $context = context_module::instance($cm->id);
 
 require_login($course);
 
-echo $OUTPUT->header();
-
-$PAGE->set_url('/mod/assign/submission/mailsimulator/contacts.php');
+$PAGE->set_url('/mod/assign/submission/mailsimulator/contacts.php', array('id' => $id));
 $PAGE->set_title('Contacts');
 $PAGE->set_pagelayout('standard');
+$PAGE->set_context($context);
+$PAGE->set_course($course);
+$PAGE->set_cm($cm);
+
+echo $OUTPUT->header();
 
 require($CFG->dirroot.'/mod/assign/submission/mailsimulator/mailbox_class.php');
 $mailboxinstance = new mailbox($context, $cm, $course);

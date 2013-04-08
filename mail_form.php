@@ -34,7 +34,6 @@ class mail_form extends moodleform {
 
         $to = $this->_customdata->to;
 
-
         // Student Reply mail
         if ($this->_customdata->parent != 0 && !$this->_customdata->teacher) {
 

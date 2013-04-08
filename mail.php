@@ -17,9 +17,12 @@ $context = context_module::instance($cm->id);
 
 require_login($course);
 
-//$PAGE->set_url('/mod/assign/submission/mailsimulator/mail.php');
+$PAGE->set_url('/mod/assign/submission/mailsimulator/file.php', array('id' => $id));
 $PAGE->set_title('Edit mail');
-//$PAGE->set_pagelayout('standard');
+$PAGE->set_pagelayout('standard');
+$PAGE->set_context($context);
+$PAGE->set_course($course);
+$PAGE->set_cm($cm);
 
 require_once($CFG->dirroot.'/mod/assign/submission/mailsimulator/mailbox_class.php');
 $mailboxinstance = new mailbox($context, $cm, $course);
@@ -135,13 +138,8 @@ require_once($CFG->dirroot.'/mod/assign/submission/mailsimulator/mail_form.php')
 //Instantiate simplehtml_form 
 $mailform = new mail_form('?gid=' . $gid, $customdata);
 
-// Get existing drafts
-if ($customdata->attachment>0) {
-    $draftitemid = $customdata->attachment;
-} else {
-    $draftitemid = file_get_submitted_draft_itemid('attachment');
-    file_prepare_draft_area($draftitemid, $context->id, 'assignsubmission_mailsimulator', 'attachment', empty($fromform->id)?null:$customdata->id, $fileoptions);
-}
+$draftitemid = file_get_submitted_draft_itemid('attachment');
+file_prepare_draft_area($draftitemid, $context->id, 'assignsubmission_mailsimulator', 'attachment', empty($customdata->mailid)?null:$customdata->mailid, $fileoptions);
 
 //Form processing and displaying is done here
 if ($mailform->is_cancelled()) {
@@ -159,24 +157,31 @@ if ($mailform->is_cancelled()) {
   //In this case you process validated data. $mailform->get_data() returns data posted in form.
     if ($mailform->is_validated()) {
 
-        //Check if attachments exist in draft area, if not, set 'attachment=0'
-        $fs = get_file_storage();
-        $files = $fs->get_area_files($context->id, 'assignsubmission_mailsimulator', 'attachment', $fromform->mailid);
-        if ($fromform->attachment>0 && (!$files)) {
-            $fromform->attachment = 0;
-        } 
-
         if ($DB->record_exists('assignsubmission_mail_mail', array('id' => $fromform->mailid))) {
           $mailboxinstance->update_mail($fromform);
+          $currentmailid = $fromform->id; // We went back to original naming: id stands for mailid
         } else {
           $currentmailid = $mailboxinstance->insert_mail($fromform, $gid);
         }
 
         if ($attachmentenabled) {
-        file_save_draft_area_files($fromform->attachment, $context->id, 'assignsubmission_mailsimulator', 'attachment',
+            //Check if attachments exist in draft area, if not, set 'attachment=0'
+            $info = file_get_draft_area_info($fromform->attachment);
+            $present = ($info['filecount']>0) ? '1' : '';
+            file_save_draft_area_files($fromform->attachment, $context->id, 'assignsubmission_mailsimulator', 'attachment',
                    $currentmailid, $fileoptions);
+            $DB->set_field('assignsubmission_mail_mail', 'attachment', $present, array('id'=>$currentmailid));
         }
-
+        /*
+        if ($fromform->parent == 0) {
+            //$mailboxinstance->add_template($fromform, $gid);
+        } else {
+            if (!has_capability('mod/assign:grade', $context)) {
+                //$obj = $this->get_mail_status($mailid);
+                //$this->set_mail_status($obj->mailid, 2);
+            }
+        }
+        */
         redirect($CFG->wwwroot . '/mod/assign/submission/mailsimulator/mailbox.php?id=' . $cm->id, '', 0);
     }
 
