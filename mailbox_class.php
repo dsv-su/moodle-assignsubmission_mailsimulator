@@ -62,7 +62,6 @@ class mailbox {
         } else {
             if ($existingsubmission->status<>'submitted') {
                 $this->view_mailbox();
-                $this->update_user_submission($USER->id);
             } else {
                 echo $OUTPUT->notification('You cannot view the mailbox since you have already sent this assignment for grading');
                 echo html_writer::empty_tag('br');
@@ -93,14 +92,13 @@ class mailbox {
             if (!has_capability('mod/assign:grade', context_module::instance($this->cm->id)))
                 error('Assignment needs to be setup correctly, contact your teacher');
 
-            /// ADD NEW MAIL
+            /// Add nee mail
             if (!$DB->record_exists('assignsubmission_mail_cntct', array('assignment' => $this->cm->instance))) {
                 $this->add_contacts();
             }
             $this->add_mail();
         } elseif ($mailgroupnumber < $mailgroupcount) {
             $this->plugininstance->set_config('mailnumber', $mailgroupcount);
-            //set_field('assignment', 'var1', $mailgroupcount, 'id', $this->assignment->id);
         } 
 
         // All Teacher Mail Parents must have a Parent 
@@ -530,7 +528,6 @@ class mailbox {
     function add_mail($tid=0, $gid=0) {
         global $CFG;
 
-        //$re = optional_param('re', 0, PARAM_INT);         // Reply 1=one, 2=all
         redirect($CFG->wwwroot . '/mod/assign/submission/mailsimulator/mail.php?id=' . $this->cm->id . '&tid=' . $tid . '&gid=' . $gid . '&re=' . $re, 'Add a mail', 0);
     }
 
@@ -584,8 +581,8 @@ class mailbox {
 
         $existingsubmission = $this->user_have_registered_submission($userid, $this->cm->instance);
 
-        $assign = new assign($this->context, $this->cm, null);
-        $submission = $assign->get_user_submission($userid, true);        
+        //$assign = new assign($this->context, $this->cm, null);
+        $submission = $this->assigninstance->get_user_submission($userid, true);        
 
         if ($existingsubmission) {
             $submission->timemodified = time();
@@ -718,9 +715,7 @@ class mailbox {
             $message .= '<br /><br/>' . $date . ' ' . get_string('wrote', 'assignsubmission_mailsimulator', $from) . ':';
             $message .= '<div style="border-left: 2px outset #000000; padding: 5px; padding-bottom: 0px; padding-right: 0px;">';    
             $message .= $mailobj->attachment>0 ? $this->get_files_str($mailobj->id, 0) : '';
-            $message .= format_text(unserialize($mailobj->message)['text'], FORMAT_MOODLE);
-                //$message .= ($mailobj->attachment ? $this->get_files_str($mailobj->id, $mailobj->userid) : '')
-        
+            $message .= format_text(unserialize($mailobj->message)['text'], FORMAT_MOODLE);        
             $dept++;
         }
 
@@ -763,7 +758,6 @@ class mailbox {
                 ':<br /><div style="border-left: 2px outset #000000; padding: 5px; padding-bottom: 0px; padding-right: 0px;">';
             }
 
-            //$replystr .= ( $m->attachment ? $this->get_files_str($m->id, $m->userid) : '') . format_text($m->message);
             $replystr .= $m->attachment>0 ? $this->get_files_str($m->id, 0) : '';
             $replystr .= format_text(unserialize($m->message)['text'], FORMAT_MOODLE);
 
@@ -928,10 +922,7 @@ class mailbox {
                 else {
                     $message = format_text(unserialize($mailobj->message)['text'], FORMAT_MOODLE);
                     $attachments = $mailobj->attachment>0 ? $this->get_files_str($mailobj->id, 0) : '';
-                    $mailobj->message = '<div class="mailmessage">' . $attachments . $message . '</div>';
-
-                    //($mailobj->attachment ? $this->get_files_str($mailobj->id, $mailobj->userid) : '') 
-                    
+                    $mailobj->message = '<div class="mailmessage">' . $attachments . $message . '</div>';                    
                     $replyobject[] = $mailobj;
                 }
             }
@@ -1036,7 +1027,6 @@ class mailbox {
     function topbar() {
         global $CFG;
 
-        //$submission = $this->get_submission();
         $mid = optional_param('mid', 0, PARAM_INT);       // Mail id
         $link = $CFG->wwwroot . '/mod/assign/submission/mailsimulator/mail.php?id=' . $this->cm->id . '&re=';
         $imgurl = $CFG->wwwroot . '/mod/assign/submission/mailsimulator/pix/';
@@ -1219,7 +1209,6 @@ class mailbox {
         $bodystr .= '</div>';
 
         if ($sentview) {
-            //$bodystr .= ( $mailobject->attachment ? $this->get_files_str($mailobject->id, $mailobject->userid) : '');
             $bodystr .= $mailobject->attachment>0 ? $this->get_files_str($mailobject->id, 0) : '';
             $bodystr .= $this->get_nested_from_child($mailobject);
         } else {
@@ -1243,8 +1232,11 @@ class mailbox {
 
     // Creates a new mail and returns the id or false
     function insert_mail($mail, $gid=0) {
-        global $CFG, $USER, $DB;
+        global $CFG, $DB;
 
+        // Update submission information only when a student sends a mail
+        $this->update_user_submission($mail->userid);
+        
         $mailid = $DB->insert_record('assignsubmission_mail_mail', $mail);
 
         if ($mailid) {
@@ -1426,9 +1418,9 @@ class mailbox {
         echo '}';
         echo '</script>';
 
+        echo '<table>';
         if ($teacher) {
             //print_simple_box_start('center', '', '', '', 'generalbox', 'dates');
-            echo '<table>';
             if ($this->assigninstance->timedue) {
                 echo '  <tr>';
                 echo '      <td class="c0">' . get_string('duedate', 'assign') . ':</td>';
@@ -1437,22 +1429,25 @@ class mailbox {
             }
 
             echo '  <tr>';
-            echo '      <td class="c0">' . get_string('lastmodified') . ' (' . get_string('student', 'grades') . '):</td>';
+            echo '      <td class="c0">' . get_string('lastmodified') . ' (' . get_string('student', 'grades') . '): </td>';
             echo '      <td class="c1">' . userdate($submission->timemodified) . '</td>';
             echo '  </tr>';
-            echo '  <tr>';
+          /*  echo '  <tr>';
             echo '      <td class="c0" style="padding-right: 15px;">' . get_string('lastmodified') . ' (' . get_string('defaultcourseteacher'). '):</td>';
             echo '      <td class="c1">' . userdate($submission->timemarked) . '</td>';
             echo '  </tr>';
-            echo '  <tr>';
-            echo '      <td class="c0">' . get_string('weight_maxweight', 'assignsubmission_mailsimulator') . ':';
-            echo $OUTPUT->help_icon('weight', 'assignsubmission_mailsimulator');
-            echo '      </td>';
-            echo '      <td class="c1">' . $totalgained . ' / ' . $maxweight * 2 . '</td>';
-            echo '  </tr>';
-            echo '</table>';
-            //print_simple_box_end();
+          */
         }
+        
+        echo '  <tr>';
+        echo '      <td class="c0">' . get_string('weight_maxweight', 'assignsubmission_mailsimulator') . ':';
+        echo $OUTPUT->help_icon('weight', 'assignsubmission_mailsimulator') .' ';
+        echo '      </td>';
+        echo '      <td class="c1">' . $totalgained . ' / ' . $maxweight * 2 . '</td>';
+        echo '  </tr>';
+        echo '</table>';
+            //print_simple_box_end();
+
 
         //print_simple_box_start('center');
 
@@ -1537,10 +1532,11 @@ class mailbox {
             echo '  <option value="2" >' . get_string('no') . '</option>';
             echo '  <option value="3" >' . get_string('yes') . '</option>';
            echo '</select> ';
-*/            echo '<br /><input type="submit" value="Submit" name="submit" />';
- //       }
-
+            echo '<br /><input type="submit" value="Submit" name="submit" />';
+        }
+*/
         if ($teacher) {
+            echo '<br /><input type="submit" value="Submit" name="submit" />';
             echo '</form>';
         }
         //print_box_end();

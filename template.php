@@ -64,12 +64,12 @@ if ($tform->is_cancelled()){
     redirect($CFG->wwwroot . '/mod/assign/submission/mailsimulator/mailbox.php?id=' . $cm->id, '<center>Return to the mailbox view</center>' , 0);
 } else if ($fromform=$tform->get_data()){
     if ($tform->is_validated()) {
-        $tstatus = 'Template ';
+        $tstatus = '<center>Template ';
 
         if (isset($fromform->templateid) && $DB->record_exists('assignsubmission_mail_tmplt', array('id' => $fromform->templateid))) {
             $fromform->id = $fromform->templateid;
             $DB->update_record('assignsubmission_mail_tmplt', $fromform);
-            $tstatus .= $fromform->id . ' UPDATED';
+            $tstatus .= $fromform->id . ' has been updated</center>';
         } else {
             $tid = $DB->insert_record('assignsubmission_mail_tmplt', $fromform);
             $tstatus .= $tid . ' ADDED';

@@ -3,7 +3,7 @@
 require_once(dirname(__FILE__).'/../../../../config.php');
 require_once($CFG->libdir.'/filelib.php');
 
-global $CFG, $DB, $PAGE, $COURSE;
+global $CFG, $DB, $PAGE, $COURSE, $USER;
 
 $id   = required_param('id', PARAM_INT);
 $tid = optional_param('tid', 0, PARAM_INT);       // Template ID
@@ -27,7 +27,7 @@ $PAGE->set_cm($cm);
 require_once($CFG->dirroot.'/mod/assign/submission/mailsimulator/mailbox_class.php');
 $mailboxinstance = new mailbox($context, $cm, $course);
 
-$teacher = has_capability('mod/assign:grade', context_module::instance($cm->id));
+$teacher = has_capability('mod/assign:grade', $context);
 
 if ($mid) {
     if (!$teacher) {echo 'Go away!';}
@@ -172,17 +172,16 @@ if ($mailform->is_cancelled()) {
                    $currentmailid, $fileoptions);
             $DB->set_field('assignsubmission_mail_mail', 'attachment', $present, array('id'=>$currentmailid));
         }
-        /*
-        if ($fromform->parent == 0) {
-            //$mailboxinstance->add_template($fromform, $gid);
-        } else {
-            if (!has_capability('mod/assign:grade', $context)) {
-                //$obj = $this->get_mail_status($mailid);
-                //$this->set_mail_status($obj->mailid, 2);
+       // if ($fromform->parent == 0) {
+       //     $mailboxinstance->add_template($fromform, $gid);
+       // } else {
+            if (!$teacher) {
+                $obj = $mailboxinstance->get_mail_status($fromform->parent);
+                $mailboxinstance->set_mail_status($obj->mailid, 2);
             }
-        }
-        */
-        redirect($CFG->wwwroot . '/mod/assign/submission/mailsimulator/mailbox.php?id=' . $cm->id, '', 0);
+       // }
+        $redirect=true;
+        echo '<center>You will now be redirected back to the mailbox</center>';
     }
 
 } else {
@@ -201,6 +200,10 @@ echo '          <td width="32px" class="shadow-right-bg"></td>';
 echo '      </tr>';
 echo '  </table>';
 echo '  <!-- End Window Content Table -->';
+
+if ($redirect) {
+    redirect($CFG->wwwroot . '/mod/assign/submission/mailsimulator/mailbox.php?id=' . $cm->id, '', -1);
+}
 
 echo '  <!-- Start Bottom Shadow Table -->';
 echo '  <table border="0"  width="100%">';

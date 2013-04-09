@@ -17,10 +17,10 @@ $PAGE->set_context($context);
 $PAGE->set_course($course);
 $PAGE->set_cm($cm);
 
-echo $OUTPUT->header();
-
 require($CFG->dirroot.'/mod/assign/submission/mailsimulator/mailbox_class.php');
 $mailboxinstance = new mailbox($context, $cm, $course);
+
+echo $OUTPUT->header();
 
 $mailboxinstance->print_tabs('addcontacts');
 

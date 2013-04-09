@@ -215,7 +215,7 @@ class assign_submission_mailsimulator extends assign_submission_plugin {
         }
 
         $result = html_writer::start_tag('div', array('class' => $divclass));
-        $result .= 'Mails sent: '. $mailssent .' <br> Weight given:' . $weightgiven;
+        $result .= 'Mails sent: '. $mailssent .' <br> Weight given: ' . $weightgiven;
         $result .= html_writer::end_tag('div');
 
         return $result;
