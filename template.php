@@ -76,18 +76,17 @@ $tform = new template_form(null, $customdata);
 
 if ($tform->is_cancelled()) {
     redirect($CFG->wwwroot . '/mod/assign/submission/mailsimulator/mailbox.php?id=' . $cm->id,
-        '<center>Return to the mailbox view</center>' , 1);
+        get_string('returnmailbox', 'assignsubmission_mailsimulator') , 1);
 } else if ($fromform=$tform->get_data()) {
     if ($tform->is_validated()) {
-        $tstatus = '<center>Template ';
         $templateexist = $DB->record_exists('assignsubmission_mail_tmplt', array('id' => $fromform->templateid));
         if (isset($fromform->templateid) && $templateexist) {
             $fromform->id = $fromform->templateid;
             $DB->update_record('assignsubmission_mail_tmplt', $fromform);
-            $tstatus .= $fromform->id . ' has been updated</center>';
+            $tstatus = get_string('correctiontemplateupdated', 'assignsubmission_mailsimulator', $fromform->id);
         } else {
             $tid = $DB->insert_record('assignsubmission_mail_tmplt', $fromform);
-            $tstatus .= $tid . ' has been added';
+            $tstatus = get_string('correctiontemplateadded', 'assignsubmission_mailsimulator', $tid);
         }
         redirect($CFG->wwwroot . '/mod/assign/submission/mailsimulator/mailbox.php?id=' . $cm->id, $tstatus, 1);
     }

@@ -128,9 +128,6 @@ class assign_submission_mailsimulator extends assign_submission_plugin {
             // AND ct.id = ra.contextid '.
             'AND c.id = ' . $COURSE->id;
         $records = $DB->get_records_sql($sql);
-        if (!$records) {
-            $OUTPUT->print_error('This course does not have any teachers.');
-        }
 
         foreach ($records as $teacher) {
             $teachers[$teacher->uid] = $teacher->firstname . ' ' . $teacher->lastname . ' &lt;' . $teacher->email . '&gt;';
@@ -205,10 +202,11 @@ class assign_submission_mailsimulator extends assign_submission_plugin {
         if ($submission) {
             $mailboxinstance->view_grading_feedback($userid);
         } else {
-            error("User doesn't have any active submission");
+            error(get_string('submissionstatus_', 'assign'));
         }
         $o = ob_get_contents();
         ob_end_clean();
+
         return $o;
     }
 
@@ -247,7 +245,9 @@ class assign_submission_mailsimulator extends assign_submission_plugin {
         }
 
         $result = html_writer::start_tag('div');
-        $result .= 'Mails sent: '. $mailssent .' <br> Weight given: ' . $weightgiven;
+        $result .= get_string('mailssent', 'assignsubmission_mailsimulator') . $mailssent;
+        $result .= html_writer::empty_tag('br');
+        $result .= get_string('weightgiven', 'assignsubmission_mailsimulator') . $weightgiven;
         $result .= html_writer::end_tag('div');
 
         return $result;
@@ -280,7 +280,8 @@ class assign_submission_mailsimulator extends assign_submission_plugin {
         $finaltext  = html_writer::start_tag('html');
         $finaltext .= html_writer::start_tag('head');
         $finaltext .= html_writer::start_tag('title');
-        $finaltext .= 'Mails sent by '.fullname($user).' on '.$assigninstance->get_instance()->name;
+        $finaltext .= get_string('mailssent', 'assignsubmission_mailsimulator') . ' by '. fullname($user) .
+            ' on ' . $assigninstance->get_instance()->name;
         $finaltext .= html_writer::end_tag('title');
         $finaltext .= html_writer::empty_tag('meta', array(
             'http-equiv' => 'Content-Type',

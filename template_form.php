@@ -90,7 +90,7 @@ class template_form extends moodleform {
         $errors = array();
 
         if (strlen(ltrim($data['correctiontemplate'])) < 1) {
-            $errors['correctiontemplate'] = 'Rättnigs mallen kan ej vara tom';
+            $errors['correctiontemplate'] = get_string('err_template', 'assignsubmission_mailsimulator');
         }
 
         return $errors;

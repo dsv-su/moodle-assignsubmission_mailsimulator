@@ -87,7 +87,7 @@ class mailbox {
                 error('You cannot view the mailbox since you have already sent this assignment for grading');
             }
             echo html_writer::tag('div', html_writer::link('../../view.php?id=' . $this->cm->id,
-                'Back to the assignment start page'), array('align'=>'center'));
+                get_string('backtostart', 'assignsubmission_mailsimulator')), array('align'=>'center'));
         }
 
     }
@@ -1077,7 +1077,7 @@ class mailbox {
 
         $sidebarstr = '<div class="mailboxheader">' . get_string('mailboxes', 'assignsubmission_mailsimulator') . '</div>';
         $sidebarstr .= '<div class="' . ($route == 0 ? 'mailboxselect' : 'mailbox') . '"><img src="' . $imgurl .
-        'inbox.png"><a href="' . $CFG->wwwroot . '/mod/assign/submission/mailsimulator/mailbox.php?id='.
+            'inbox.png"><a href="' . $CFG->wwwroot . '/mod/assign/submission/mailsimulator/mailbox.php?id='.
         $this->cm->id.'&route=0">' . get_string('inbox', 'assignsubmission_mailsimulator') . '</a></div>';
         $sidebarstr .= '<div class="' . ($route == 1 ? 'mailboxselect' : 'mailbox') . '"><img src="' .
         $imgurl . 'sent.png"><a href="' . $CFG->wwwroot . '/mod/assign/submission/mailsimulator/mailbox.php?id='.

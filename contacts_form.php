@@ -38,7 +38,7 @@ class contacts_form extends moodleform {
         $mform->addElement('hidden', 'id', $this->_customdata['moduleID']);
         $mform->setType('id', PARAM_INT);
 
-        $repeatarray[] = $mform->createElement('header', '', 'Contact' . ' {no}'   );
+        $repeatarray[] = $mform->createElement('header', '', get_string('contact', 'assignsubmission_mailsimulator') . ' {no}');
         $repeatarray[] = $mform->createElement('hidden', 'contactid', 0);
         $repeatarray[] = $mform->createElement('text', 'firstname', get_string('firstname'));
         $repeatarray[] = $mform->createElement('text', 'lastname', get_string('lastname'));
@@ -47,7 +47,7 @@ class contacts_form extends moodleform {
         $repeatno = $DB->count_records('assignsubmission_mail_cntct', array("assignment"=>$cm->instance));
         $repeatno = $repeatno == 0 ? 1 : $repeatno;
         $this->repeat_elements($repeatarray, $repeatno, array(), 'option_repeats',
-            'option_add_contact_fields', 1, 'Add a new contact');
+            'option_add_contact_fields', 1, get_string('addnewcontact', 'assignsubmission_mailsimulator'));
 
         $this->add_action_buttons(true, 'Submit');
     }

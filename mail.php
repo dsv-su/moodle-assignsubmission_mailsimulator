@@ -39,7 +39,7 @@ $context = context_module::instance($cm->id);
 
 require_login($course);
 
-$PAGE->set_url('/mod/assign/submission/mailsimulator/file.php', array('id' => $id));
+$PAGE->set_url('/mod/assign/submission/mailsimulator/mail.php', array('id' => $id));
 $PAGE->set_title('Edit mail');
 $PAGE->set_pagelayout('standard');
 $PAGE->set_context($context);
@@ -146,7 +146,7 @@ file_prepare_draft_area($draftitemid, $context->id, 'assignsubmission_mailsimula
 // Form processing and displaying is done here.
 if ($mailform->is_cancelled()) {
     redirect($CFG->wwwroot . '/mod/assign/submission/mailsimulator/mailbox.php?id=' . $cm->id,
-        '<center>Return to the mailbox view</center>', 1);
+        get_string('returnmailbox', 'assignsubmission_mailsimulator'), 1);
 } else if ($fromform = $mailform->get_data()) {
     if (!$teacher) { // We need to simulate the same structure as it would be a teacher's mail.
         $objmessage  = array();
@@ -183,7 +183,7 @@ if ($mailform->is_cancelled()) {
         }
 
         redirect($CFG->wwwroot . '/mod/assign/submission/mailsimulator/mailbox.php?id=' . $cm->id,
-            'You will now be redirected back to mailbox', 1);
+            get_string('returnmailbox', 'assignsubmission_mailsimulator'), 1);
     }
 
 } else {

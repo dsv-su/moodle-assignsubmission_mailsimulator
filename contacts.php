@@ -48,7 +48,7 @@ $mform = new contacts_form(null, array("moduleID"=>$id));
 // Form processing and displaying is done here.
 if ($mform->is_cancelled()) {
     redirect($CFG->wwwroot . '/mod/assign/submission/mailsimulator/mailbox.php?id=' . $cm->id,
-        '<center>Return to the mailbox view</center>' , 1);
+        get_string('returnmailbox', 'assignsubmission_mailsimulator') , 1);
 } else if ($fromform = $mform->get_data()) {
     // In this case you process validated data. $mform->get_data() returns data posted in form.
     if ($mform->is_validated()) {
