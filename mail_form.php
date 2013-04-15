@@ -1,19 +1,41 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ * Mail editing form class for the mailsimulator submission plugin.
+ *
+ * @package assignsubmission_mailsimulator
+ * @copyright 2013 Department of Computer and System Sciences,
+ *                  Stockholm University  {@link http://dsv.su.se}
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 require_once($CFG->libdir . '/formslib.php');
 require_once($CFG->libdir . '/filelib.php');
 
 class mail_form extends moodleform {
- 
+
     function definition() {
         global $CFG, $DB;
 
-        $mform =& $this->_form; // Don't forget the underscore!
+        $mform =& $this->_form;
 
         $id = optional_param('id', 0, PARAM_INT);
         $userid = optional_param('userid', 0, PARAM_INT);
 
-        // Course Module Id
         $mform->addElement('hidden', 'id', $id);
         $mform->setType('id', PARAM_INT);
 
@@ -27,19 +49,21 @@ class mail_form extends moodleform {
         $mform->setType('parent', PARAM_INT);
 
         $mform->addElement('hidden', 'userid', $this->_customdata->userid);
-        $mform->setType('userid', PARAM_INT); 
+        $mform->setType('userid', PARAM_INT);
 
-        $prio = array(0 => '- ' . get_string('low', 'assignsubmission_mailsimulator'), 1 => '! ' . get_string('medium', 'assignsubmission_mailsimulator'), 2 => '!! ' . get_string('high', 'assignsubmission_mailsimulator'));
+        $prio = array(0 => '- ' . get_string('low', 'assignsubmission_mailsimulator'), 1 => '! ' .
+            get_string('medium', 'assignsubmission_mailsimulator'), 2 => '!! ' .
+            get_string('high', 'assignsubmission_mailsimulator'));
         $mform->addElement('select', 'priority', get_string('priority', 'assignsubmission_mailsimulator'), $prio);
 
         $to = $this->_customdata->to;
 
-        // Student Reply mail
+        // Student Reply mail.
         if ($this->_customdata->parent != 0 && !$this->_customdata->teacher) {
 
             $replyobj = $DB->get_record('assignsubmission_mail_mail', array('id' => $this->_customdata->parent));
 
-            // Reply To All --------- or forward
+            // Reply To All --------- or forward.
             if ($this->_customdata->reply > 1) {
                 $toarr = $DB->get_records('assignsubmission_mail_to', array('mailid' => $this->_customdata->parent));
                 foreach ($toarr as $value) {
@@ -47,33 +71,31 @@ class mail_form extends moodleform {
                 }
             }
 
-            // Reply To Sender
+            // Reply To Sender.
             if ($replyobj->userid != 0) {
                 $replyto[TO_STUDENT_ID] = TO_STUDENT_ID;
             } else {
                 $replyto[$replyobj->sender] = $replyobj->sender;
             }
-            # -------------
 
             if ($this->_customdata->reply <= 2) {
                 $select = $mform->addElement('select', 'to', get_string('to'), array());
 
-                if ($this->_customdata->reply == 2)
+                if ($this->_customdata->reply == 2) {
                     $select->setMultiple(true);
+                }
 
                 foreach ($to as $key => $value) {
-
                     if (key_exists($key, $replyto)) {
                         $select->addOption($value, $key, array('selected' => 'selected'));
                     }
                 }
-            } elseif ($this->_customdata->reply == 3) {
+            } else if ($this->_customdata->reply == 3) {
                 $select = $mform->addElement('select', 'to', get_string('to'), $to);
                 $select->setMultiple(true);
             }
 
-        // Teacher New mail
-        } else {
+        } else { // Teacher's new mail.
             if ($this->_customdata->reply) {
 
                 $replyobj = $DB->get_record('assignsubmission_mail_mail', array('id' => $this->_customdata->parent));
@@ -85,7 +107,7 @@ class mail_form extends moodleform {
                     }
                 }
 
-                // Reply To Sender
+                // Reply To Sender.
                 if ($replyobj->userid != 0) {
                     $replyto[TO_STUDENT_ID] = TO_STUDENT_ID;
                 } else {
@@ -156,32 +178,40 @@ class mail_form extends moodleform {
         $mform->setDefault('subject', $this->_customdata->subject);
 
         if ($this->_customdata->teacher) {
-            $mform->addElement('editor', 'message', get_string('message', 'assignsubmission_mailsimulator'), array('cols' => 83, 'rows' => 20));
-            $mform->setType('message', PARAM_RAW); // to be cleaned before display
-            //$mform->addHelpButton('message', array('reading', 'writing', 'richtext'), false, 'editorhelpbutton');
+            $mform->addElement('editor', 'message', get_string('message', 'assignsubmission_mailsimulator'),
+                array('cols' => 83, 'rows' => 20));
+            $mform->setType('message', PARAM_RAW); // To be cleaned before display.
         } else {
-            $mform->addElement('textarea', 'message', get_string('message', 'assignsubmission_mailsimulator'), array('cols' => 83, 'rows' => 20));
+            $mform->addElement('textarea', 'message', get_string('message', 'assignsubmission_mailsimulator'),
+                array('cols' => 83, 'rows' => 20));
             $mform->setType('message', PARAM_TEXT);
         }
 
         $mform->setDefault('message', $this->_customdata->message);
         // Here upload of the files goes!
         if (((!isset($this->_customdata->inactive) || $this->_customdata->inactive) && ($this->_customdata->attachmentenabled))) {
-            $mform->addElement('filemanager', 'attachment', get_string('attachment', 'forum'), null, $this->_customdata->fileoptions);
+            $mform->addElement('filemanager', 'attachment', get_string('attachment', 'forum'), null,
+                $this->_customdata->fileoptions);
         }
 
         $this->add_action_buttons(true, 'Submit');
     }
 
-        //Custom validation should be added here
+    // Custom validation is done here.
     function validation($data, $files) {
         $errors = array();
 
         if (strlen(ltrim($data['subject'])) < 1) {
             $errors['subject'] = get_string('err_emptysubject', 'assignsubmission_mailsimulator');
         }
-        if (strlen(ltrim($data['message']['text'])) < 1) {
-            $errors['message'] = get_string('err_emptymessage', 'assignsubmission_mailsimulator');
+        if (is_array($data['message'])) {
+            if (strlen(ltrim($data['message']['text'])) < 1) {
+                $errors['message'] = get_string('err_emptymessage', 'assignsubmission_mailsimulator');
+            }
+        } else {
+            if (strlen(ltrim($data['message'])) < 1) {
+                $errors['message'] = get_string('err_emptymessage', 'assignsubmission_mailsimulator');
+            }
         }
         if ($data['timesent'] > time()) {
             $errors['timesent'] = get_string('err_date', 'assignsubmission_mailsimulator');

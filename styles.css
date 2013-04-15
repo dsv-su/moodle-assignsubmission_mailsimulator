@@ -39,14 +39,14 @@ div.singlebutton {
         color: #666666;
 }
 
-.mailboxes {        
+.mailboxes {
 	width: 100px;
 	background-image: url([[pix:assignsubmission_mailsimulator|mailboxes-bg]]);
 }
 
 .mailbox {
         font-size: 80%;
-        height 24px;      
+        height 24px;
 }
 
 .mailbox img {
@@ -90,7 +90,7 @@ mailheadertd {
 	padding: 0;
 }
 
-.mailheadertable {	
+.mailheadertable {
 	border-bottom-style: solid;
 	border-bottom-color: #999999;
 	border-bottom-width: 1px;
@@ -98,7 +98,7 @@ mailheadertd {
         font-size: 10px;
 }
 
-.mailheadertableselected {  	
+.mailheadertableselected {
 	border-bottom-style: solid;
 	border-bottom-color: #999999;
 	border-bottom-width: 1px;

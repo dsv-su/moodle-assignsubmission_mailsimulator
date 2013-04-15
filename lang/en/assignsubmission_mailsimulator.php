@@ -1,4 +1,19 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
 /**
  * Strings for component 'assignsubmission_mailsimulator', language 'en'
  *
@@ -16,7 +31,7 @@ $string['addonecontact'] = 'You need to add at least one contact.';
 $string['allsubmissions'] = 'All submissions';
 $string['alternative'] = 'Alternative';
 $string['comment'] = 'Comment';
-$string['confirmdelete'] = 'Are you shure you want to delete this mail and attachments?';
+$string['confirmdelete'] = 'Are you sure you want to delete this mail and attachments?';
 $string['contactinuse'] = 'This contact is in use and can therefore not be deleted.';
 $string['contact'] = 'Contact';
 $string['correctiontemplate'] = 'Correction Template';
@@ -44,7 +59,6 @@ $string['mailbox'] = 'Mailbox';
 $string['mailboxes'] = 'Mailboxes';
 $string['mailtostudent'] = 'STUDENT E-MAIL ADRESS';
 
-//$string['maximumsize'] = 'Maximum attachment size';
 $string['medium'] = 'medium';
 $string['message'] = 'Message';
 $string['needcompletion'] = 'Need completion';
@@ -53,7 +67,6 @@ $string['newcorrectiontemplate'] = 'New correction template';
 $string['newmail'] = 'New Mail';
 $string['noanswer'] = 'No Answer';
 $string['nonewstudentmail'] = 'No new student mail';
-//$string['numberofmail'] = 'Number of mail';
 $string['priority'] = 'Priority';
 $string['re'] = 'Re: ';
 $string['readyforgrading'] = 'Ready for grading';
@@ -65,8 +78,9 @@ $string['replyall_help'] = 'replyall help';
 $string['rating'] = 'Rating';
 $string['send'] = 'Send';
 $string['sent'] = 'Sent';
-$string['studentreplies'] = 'Student replies:';
-$string['studentrepliesstudent'] = 'Your replies:';
+$string['studentreplies'] = 'Replies:';
+$string['studentnewmails'] = 'New mails:';
+
 $string['subject'] = 'Subject';
 
 $string['timemarked'] = 'TIMEMARKED';
@@ -77,7 +91,7 @@ $string['updatecorrectiontemplate'] = 'Update a correction template / weight';
 $string['updatecorrectiontemplate_help'] = 'update helphelp';
 $string['vieweditmail'] = 'View/Edit Mail';
 
-$string['weight_maxweight'] = 'Weigt / Max';
+$string['weight_maxweight'] = 'Weigt/Max';
 $string['wrote'] = '{$a} wrote';
 
 $string['delete'] = 'Delete a mail';
@@ -103,6 +117,9 @@ $string['filesubmissions_help'] = 'If enabled, students are able to attach docum
 $string['teacherid'] = 'Teacher mail';
 $string['teacherid_help'] = 'This teacher will be added to sender/recipient lists.';
 
+$string['mailsimulatorfilename'] = 'mailsubmission.html';
+$string['printed'] = 'Printed';
+
 $string['mailsimulator'] = 'Mail Simulator submission';
 $string['mailadmin'] = "Mail Simulator admin page";
 $string['enabled'] = 'Online text';
@@ -111,3 +128,6 @@ $string['pluginname'] = 'Mail Simulator';
 
 $string['addalternativemail'] = 'Add an alternative mail';
 $string['addalternativemail_help'] = '<p>Each time a new student checkout the assignment for the first time the student is given as a set of random mail, the more alternatives a mail has the less likely it is that to two students receive the same mail.</p><p>This makes it difficult for students to cheat.</p>';
+
+$string['default'] = 'Enabled by default';
+$string['default_help'] = 'If set, this submission method will be enabled by default for all new assignments.';

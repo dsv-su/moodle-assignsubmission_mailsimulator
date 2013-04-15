@@ -1,4 +1,19 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
 /**
  * Library class for the mailsimulator submission plugin.
  *
@@ -10,10 +25,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-define('ASSIGNSUBMISSION_MAILSIMULATOR_MAXWEIGHT', 10);
-define('ASSIGNSUBMISSION_MAILSIMULATOR_MAXMAILS', 10);
-
 require_once($CFG->dirroot . '/mod/assign/submissionplugin.php');
+require_once($CFG->dirroot . '/mod/assign/submission/mailsimulator/lib.php');
 
 class assign_submission_mailsimulator extends assign_submission_plugin {
 
@@ -31,19 +44,26 @@ class assign_submission_mailsimulator extends assign_submission_plugin {
      * @param MoodleQuickForm $mform The form to append the elements to.
      */
     public function get_settings(MoodleQuickForm $mform) {
-        global $CFG, $DB, $COURSE;
+        global $CFG, $DB, $COURSE, $OUTPUT;
 
         $cmid = optional_param('update', 0, PARAM_INT);
 
-        //$filesubmissionsdefault = get_config('assignsubmission_mailsimulator')->filesubmissions;
-        //$mailnumberdefault = get_config('assignsubmission_mailsimulator')->mailnumber;
-        //$maxweightdefault = get_config('assignsubmission_mailsimulator')->maxweight;
-        //$maxbytesdefault = get_config('assignsubmission_mailsimulator')->maxbytes;
-
         $filesubmissionsdefault = $this->get_config('filesubmissions');
+        if ($filesubmissionsdefault === false) {
+            $filesubmissionsdefault = get_config('assignsubmission_mailsimulator', 'filesubmissions');
+        }
         $mailnumberdefault = $this->get_config('mailnumber');
+        if ($mailnumberdefault === false) {
+            $mailnumberdefault = get_config('assignsubmission_mailsimulator', 'mailnumber');
+        }
         $maxweightdefault = $this->get_config('maxweight');
+        if ($maxweightdefault === false) {
+            $maxweightdefault = get_config('assignsubmission_mailsimulator', 'maxweight');
+        }
         $maxbytesdefault = $this->get_config('maxbytes');
+        if ($maxbytesdefault === false) {
+            $maxbytesdefault = get_config('assignsubmission_mailsimulator', 'maxbytes');
+        }
         $teacherdefault = $this->get_config('teacherid');
 
         $mform->setDefault('assignsubmission_file_enabled', 0);
@@ -55,69 +75,80 @@ class assign_submission_mailsimulator extends assign_submission_plugin {
         $mform->setDefault('submissiondrafts', 1);
         $mform->disabledIf('submissiondrafts', 'assignsubmission_mailsimulator_enabled', 'eq', 1);
         $mform->setDefault('teamsubmission', 0);
-        $mform->disabledIf('teamsubmission', 'assignsubmission_mailsimulator_enabled', 'eq', 1);  
+        $mform->disabledIf('teamsubmission', 'assignsubmission_mailsimulator_enabled', 'eq', 1);
 
-
-        // Attachments enabled/disabled
-        $mform->addElement('select', 'assignsubmission_mailsimulator_filesubmissions', get_string('filesubmissions', 'assignsubmission_mailsimulator'), array(0=>'No', 1=>'Yes'));
+        // Select whether attachments enabled.
+        $mform->addElement('select', 'assignsubmission_mailsimulator_filesubmissions',
+            get_string('filesubmissions', 'assignsubmission_mailsimulator'),
+            array(0=>'No', 1=>'Yes'));
         $mform->setDefault('assignsubmission_mailsimulator_filesubmissions', $filesubmissionsdefault);
-        $mform->addHelpButton('assignsubmission_mailsimulator_filesubmissions', 'filesubmissions', 'assignsubmission_mailsimulator');
+        $mform->addHelpButton('assignsubmission_mailsimulator_filesubmissions', 'filesubmissions',
+            'assignsubmission_mailsimulator');
         $mform->disabledIf('assignsubmission_mailsimulator_filesubmissions', 'assignsubmission_mailsimulator_enabled', 'eq', 0);
 
-        // Max weight per mail
+        // Set up max weight per mail.
         $maxweightoptions = array();
         for ($i=1; $i <= ASSIGNSUBMISSION_MAILSIMULATOR_MAXWEIGHT; $i++) {
             $maxweightoptions[$i] = $i;
         }
-        $mform->addElement('select', 'assignsubmission_mailsimulator_maxweight', get_string('maxweight', 'assignsubmission_mailsimulator'), $maxweightoptions);
+        $mform->addElement('select', 'assignsubmission_mailsimulator_maxweight',
+            get_string('maxweight', 'assignsubmission_mailsimulator'),
+            $maxweightoptions);
         $mform->setDefault('assignsubmission_mailsimulator_maxweight', $maxweightdefault);
         $mform->addHelpButton('assignsubmission_mailsimulator_maxweight', 'maxweight', 'assignsubmission_mailsimulator');
         $mform->disabledIf('assignsubmission_mailsimulator_maxweight', 'assignsubmission_mailsimulator_enabled', 'eq', 0);
 
-        // Number of mails for this assignment
+        // Set up number of mails for this assignment.
         $mailsoptions = array();
         for ($i=1; $i <= ASSIGNSUBMISSION_MAILSIMULATOR_MAXMAILS; $i++) {
             $mailsoptions[$i] = $i;
         }
 
-        $mform->addElement('select', 'assignsubmission_mailsimulator_mailnumber', get_string('defaultnumbermails', 'assignsubmission_mailsimulator'), $mailsoptions);
+        $mform->addElement('select', 'assignsubmission_mailsimulator_mailnumber',
+            get_string('defaultnumbermails', 'assignsubmission_mailsimulator'),
+            $mailsoptions);
         $mform->setDefault('assignsubmission_mailsimulator_mailnumber', $mailnumberdefault);
         $mform->addHelpButton('assignsubmission_mailsimulator_mailnumber', 'defaultnumbermails', 'assignsubmission_mailsimulator');
         $mform->disabledIf('assignsubmission_mailsimulator_mailnumber', 'assignsubmission_mailsimulator_enabled', 'eq', 0);
 
-        //Max attachment size
+        // Set up max attachment size.
         if (isset($CFG->maxbytes)) {
-            $mform->addElement('select', 'assignsubmission_mailsimulator_maxbytes', get_string('maxattachments', 'assignsubmission_mailsimulator'), get_max_upload_sizes($CFG->maxbytes));
+            $mform->addElement('select', 'assignsubmission_mailsimulator_maxbytes',
+                get_string('maxattachments', 'assignsubmission_mailsimulator'),
+                get_max_upload_sizes($CFG->maxbytes));
             $mform->setDefault('assignsubmission_mailsimulator_maxbytes', $maxbytesdefault);
             $mform->addHelpButton('assignsubmission_mailsimulator_maxbytes', 'maxattachments', 'assignsubmission_mailsimulator');
             $mform->disabledIf('assignsubmission_mailsimulator_maxbytes', 'assignsubmission_mailsimulator_enabled', 'eq', 0);
         }
 
-        //Teacher mail
+        // Set up teacher contact id.
         $sql = 'SELECT distinct u.id AS uid, u.firstname, u.lastname, u.email ' .
             'FROM {course} as c, {role_assignments} AS ra, {user} AS u, {context} AS ct ' .
             'WHERE c.id = ct.instanceid AND ra.roleid =3 AND ra.userid = u.id ' .
-            #       'AND ct.id = ra.contextid '.
+            // AND ct.id = ra.contextid '.
             'AND c.id = ' . $COURSE->id;
         $records = $DB->get_records_sql($sql);
         if (!$records) {
-            //error('This course does not have any teachers.');
+            $OUTPUT->print_error('This course does not have any teachers.');
         }
 
         foreach ($records as $teacher) {
             $teachers[$teacher->uid] = $teacher->firstname . ' ' . $teacher->lastname . ' &lt;' . $teacher->email . '&gt;';
         }
 
-        $mform->addElement('select', 'assignsubmission_mailsimulator_teacherid', get_string('teacherid', 'assignsubmission_mailsimulator'), $teachers);
+        $mform->addElement('select', 'assignsubmission_mailsimulator_teacherid',
+            get_string('teacherid', 'assignsubmission_mailsimulator'),
+            $teachers);
         $mform->setDefault('assignsubmission_mailsimulator_teacherid', $teacherdefault);
         $mform->addHelpButton('assignsubmission_mailsimulator_teacherid', 'teacherid', 'assignsubmission_mailsimulator');
         $mform->disabledIf('assignsubmission_mailsimulator_teacherid', 'assignsubmission_mailsimulator_enabled', 'eq', 0);
 
-        //$mailadminlink = html_writer::link(new moodle_url('/mod/assign/submission/mailsimulator/mailadmin.php', array('id'=>$cmid)), 
-        //    get_string('mailadmin','assignsubmission_mailsimulator'), array('target' => '_blank'));
-        
-        //$mform->addElement('static', 'assignsubmission_mailsimulator_mailadmin', '', $mailadminlink); 
-        //$mform->disabledIf('assignsubmission_mailsimulator_mailadmin', 'assignsubmission_mailsimulator_enabled', 'eq', 0);
+        if ($cmid>0) {
+            $mailadminlink = html_writer::link(new moodle_url('/mod/assign/submission/mailsimulator/mailbox.php',
+                array('id'=>$cmid)),
+            get_string('mailadmin', 'assignsubmission_mailsimulator'), array('target' => '_blank'));
+            $mform->addElement('static', 'assignsubmission_mailsimulator_mailadmin', '', $mailadminlink);
+        }
     }
 
     /**
@@ -129,7 +160,7 @@ class assign_submission_mailsimulator extends assign_submission_plugin {
     public function save_settings(stdClass $data) {
         $this->set_config('filesubmissions', $data->assignsubmission_mailsimulator_filesubmissions);
         $this->set_config('mailnumber', $data->assignsubmission_mailsimulator_mailnumber);
-        $this->set_config('maxweight', $data->assignsubmission_mailsimulator_maxweight);        
+        $this->set_config('maxweight', $data->assignsubmission_mailsimulator_maxweight);
         $this->set_config('maxbytes', $data->assignsubmission_mailsimulator_maxbytes);
         $this->set_config('teacherid', $data->assignsubmission_mailsimulator_teacherid);
         return true;
@@ -160,7 +191,7 @@ class assign_submission_mailsimulator extends assign_submission_plugin {
     public function view(stdClass $submission) {
         global $CFG, $DB, $OUTPUT;
 
-        $id         = required_param('id', PARAM_INT);          // Course Module ID
+        $id         = required_param('id', PARAM_INT);
         $sid        = optional_param('sid', $submission->id, PARAM_INT);
         $gid        = optional_param('gid', 0, PARAM_INT);
         $userid     = $DB->get_field('assign_submission', 'userid', array("id" => $sid));
@@ -179,8 +210,8 @@ class assign_submission_mailsimulator extends assign_submission_plugin {
         $o = ob_get_contents();
         ob_end_clean();
         return $o;
-    }    
-    
+    }
+
     /**
      * Displays the summary of the submission
      *
@@ -195,12 +226,11 @@ class assign_submission_mailsimulator extends assign_submission_plugin {
         $showviewlink = true;
         $cmid = required_param('id', PARAM_INT);
         $cm = get_coursemodule_from_id('assign', $cmid, 0, false, MUST_EXIST);
-
-        //$divclass = 'submissionstatusdraft';
         $userid = $submission->userid+0;
         $mailssent = $DB->count_records('assignsubmission_mail_mail', array('userid' => $userid));
-    
-        $sql = 'SELECT sm.id, sm.mailid, t.weight, sm.gainedweight, sm.feedback, m.sender, m.subject, m.message, t.correctiontemplate, m.timesent, m.priority, m.attachment, m.userid
+
+        $sql = 'SELECT sm.id, sm.mailid, t.weight, sm.gainedweight, sm.feedback, m.sender, m.subject, m.message,
+        t.correctiontemplate, m.timesent, m.priority, m.attachment, m.userid
         FROM {assignsubmission_mail_sgndml} AS sm
         LEFT JOIN {assignsubmission_mail_tmplt} AS t ON sm.mailid = t.mailid
         LEFT JOIN {assignsubmission_mail_mail} AS m ON m.id = sm.mailid
@@ -208,13 +238,15 @@ class assign_submission_mailsimulator extends assign_submission_plugin {
         AND m.assignment = ' . $cm->instance;
 
         $usermails = $DB->get_records_sql($sql);
+        $maxweight = 0;
+        $weightgiven = 0;
 
         foreach ($usermails as $mailobj) {
             $maxweight += $mailobj->weight;
             $weightgiven += ( $mailobj->gainedweight * $mailobj->weight);
         }
 
-        $result = html_writer::start_tag('div', array('class' => $divclass));
+        $result = html_writer::start_tag('div');
         $result .= 'Mails sent: '. $mailssent .' <br> Weight given: ' . $weightgiven;
         $result .= html_writer::end_tag('div');
 
@@ -228,8 +260,45 @@ class assign_submission_mailsimulator extends assign_submission_plugin {
      * @param stdClass $submission
      * @return array an array of files indexed by filename
      */
-    public function get_files(stdClass $submission) {
+    public function get_files(stdClass $submission, stdClass $user) {
         global $DB, $CFG;
+
+        $files = array();
+
+        $id         = required_param('id', PARAM_INT);
+        $sid        = optional_param('sid', $submission->id, PARAM_INT);
+        $gid        = optional_param('gid', 0, PARAM_INT);
+        $userid     = $submission->userid+0;
+        $cm         = get_coursemodule_from_id('assign', $id, 0, false, MUST_EXIST);
+        $course     = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
+        $context    = context_module::instance($cm->id);
+        require_once($CFG->dirroot.'/mod/assign/submission/mailsimulator/mailbox_class.php');
+        $mailboxinstance = new mailbox($context, $cm, $course);
+        $assigninstance = new assign($context, $cm, $course);
+
+        $user = $DB->get_record('user', array('id' => $submission->userid), 'id, username, firstname, lastname', MUST_EXIST);
+        $finaltext  = html_writer::start_tag('html');
+        $finaltext .= html_writer::start_tag('head');
+        $finaltext .= html_writer::start_tag('title');
+        $finaltext .= 'Mails sent by '.fullname($user).' on '.$assigninstance->get_instance()->name;
+        $finaltext .= html_writer::end_tag('title');
+        $finaltext .= html_writer::empty_tag('meta', array(
+            'http-equiv' => 'Content-Type',
+            'content' => 'text/html; charset=utf-8'
+        ));
+        $finaltext .= html_writer::end_tag('head');
+        $finaltext .= html_writer::start_tag('body');
+
+        ob_start();
+        echo $mailboxinstance->view_grading_feedback($userid, true, true);
+        $finaltext .= ob_get_contents();
+        ob_end_clean();
+
+        $finaltext .= html_writer::end_tag('body');
+        $finaltext .= html_writer::end_tag('html');
+        $files[get_string('mailsimulatorfilename', 'assignsubmission_mailsimulator')] = array($finaltext);
+
+        return $files;
     }
 
     /**

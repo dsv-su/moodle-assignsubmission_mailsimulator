@@ -1,8 +1,32 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ * This file contains the event hooks for the mailsimulator submission plugin.
+ *
+ * @package assignsubmission_mailsimulator
+ * @copyright 2013 Department of Computer and System Sciences,
+ *          Stockholm University  {@link http://dsv.su.se}
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 defined('MOODLE_INTERNAL') || die();
 
-define('ASSIGNSUBMISSION_MAILSIMULATOR_MAXFILES', 10);
+define('ASSIGNSUBMISSION_MAILSIMULATOR_MAXWEIGHT', 10);
+define('ASSIGNSUBMISSION_MAILSIMULATOR_MAXMAILS', 50);
 
 /**
  * Serves assignment submissions and other files.
@@ -42,7 +66,7 @@ function assignsubmission_mailsimulator_pluginfile($course,
     if ($assign->get_instance()->id != $record->assignment) {
         return false;
     }
-/*
+    /*
     if ($assign->get_instance()->teamsubmission &&
         !$assign->can_view_group_submission($groupid)) {
         return false;
@@ -52,7 +76,7 @@ function assignsubmission_mailsimulator_pluginfile($course,
         !$assign->can_view_submission($userid)) {
         return false;
     }
-*/
+    */
     $relativepath = implode('/', $args);
 
     $fullpath = "/{$context->id}/assignsubmission_mailsimulator/$filearea/$itemid/$relativepath";
@@ -61,11 +85,11 @@ function assignsubmission_mailsimulator_pluginfile($course,
     if (!($file = $fs->get_file_by_hash(sha1($fullpath))) || $file->is_directory()) {
         return false;
     }
-    send_stored_file($file, 0, 0, true); // download MUST be forced - security!
+    send_stored_file($file, 0, 0, true); // Download MUST be forced - security!
 }
 
-/*
+    /*
 function assign_extend_settings_navigation(settings_navigation $settings, navigation_node $navref) {
-       $link = new moodle_url('/grade/report/grader/index.php', array('id' => $course->id));
-       $node = $navref->add(get_string('viewgradebook', 'assign'), $link, navigation_node::TYPE_SETTING);  
-}*/
+    $link = new moodle_url('/grade/report/grader/index.php', array('id' => $course->id));
+    $node = $navref->add(get_string('viewgradebook', 'assign'), $link, navigation_node::TYPE_SETTING);
+}   */
