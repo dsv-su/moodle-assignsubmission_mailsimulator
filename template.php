@@ -46,7 +46,7 @@ $PAGE->set_course($course);
 $PAGE->set_cm($cm);
 
 if ($mid) {
-    // Check if mail exists. A template must have a mail.
+    // Check if mail exists. A template must have a mail to refer to.
     if (!$mailobj = $DB->get_record('assignsubmission_mail_mail', array('id' => $mid))) {
         echo $OUTPUT->error_text("Mail ID is incorrect");
     }
@@ -78,6 +78,7 @@ if ($tform->is_cancelled()) {
     redirect($CFG->wwwroot . '/mod/assign/submission/mailsimulator/mailbox.php?id=' . $cm->id,
         get_string('returnmailbox', 'assignsubmission_mailsimulator') , 1);
 } else if ($fromform=$tform->get_data()) {
+    // In this case you process validated data. $mform->get_data() returns data posted in form.
     if ($tform->is_validated()) {
         $templateexist = $DB->record_exists('assignsubmission_mail_tmplt', array('id' => $fromform->templateid));
         if (isset($fromform->templateid) && $templateexist) {

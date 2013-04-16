@@ -66,17 +66,7 @@ function assignsubmission_mailsimulator_pluginfile($course,
     if ($assign->get_instance()->id != $record->assignment) {
         return false;
     }
-    /*
-    if ($assign->get_instance()->teamsubmission &&
-        !$assign->can_view_group_submission($groupid)) {
-        return false;
-    }
 
-    if (!$assign->get_instance()->teamsubmission &&
-        !$assign->can_view_submission($userid)) {
-        return false;
-    }
-    */
     $relativepath = implode('/', $args);
 
     $fullpath = "/{$context->id}/assignsubmission_mailsimulator/$filearea/$itemid/$relativepath";

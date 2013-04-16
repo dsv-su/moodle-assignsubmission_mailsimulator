@@ -164,7 +164,7 @@ class assign_submission_mailsimulator extends assign_submission_plugin {
     }
 
     /**
-     * Here the submission is to be displayed.
+     * Here the mailbox is to be displayed.
      * 
      * @param mixed $submission stdClass|null
      * @param MoodleQuickForm $mform
@@ -180,7 +180,7 @@ class assign_submission_mailsimulator extends assign_submission_plugin {
 
 
     /**
-     * Displays all submitted items for this assignment from a specified student.
+     * Displays all sent mails for this assignment from a specified student.
      *
      * @param stdClass $submission
      * @return string
@@ -258,6 +258,7 @@ class assign_submission_mailsimulator extends assign_submission_plugin {
      * Produce a list of files suitable for export that represents this submission
      * 
      * @param stdClass $submission
+     * @param stdClass $user
      * @return array an array of files indexed by filename
      */
     public function get_files(stdClass $submission, stdClass $user) {

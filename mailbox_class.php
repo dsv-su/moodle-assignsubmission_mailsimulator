@@ -50,6 +50,9 @@ class mailbox {
         $this->plugininstance = new assign_submission_mailsimulator($this->assigninstance, 'mailsimulator');
     }
 
+    /**
+     * Handle the view of the mailbox
+     */
     function view() {
         global $OUTPUT, $USER, $DB;
 
@@ -92,6 +95,10 @@ class mailbox {
 
     }
 
+    /**
+     * Check if plugin is set up correctly: all top mails must have a template,
+     * add mail if the number of templates is below 'mailnumber' config setting.
+     */
     function check_assignment_setup() {
         global $CFG, $DB;
 
@@ -142,6 +149,13 @@ class mailbox {
         }
     }
 
+    /**
+     * Returns the html code for attachments output (filetype image + link)
+     *
+     * @param int $mid
+     * @param int $userid
+     * @return string
+     */
     function get_files_str($mid, $userid) {
         global $CFG, $OUTPUT;
         $fs = get_file_storage();
@@ -184,6 +198,11 @@ class mailbox {
         return $output;
     }
 
+    /**
+     * View all mails that have been added by a teacher for this assignment. Teacher's main view.
+     *
+     * @param bool $trash
+     */
     function view_assignment_mails($trash=false) {
         global $DB, $OUTPUT, $CFG;
 
@@ -410,6 +429,14 @@ class mailbox {
         echo '<br />';
     }
 
+    /**
+     * Get all mails that have been sent by user together with feedback and given weight,
+     * depending on whether it is $forgrading
+     *
+     * @param int $userid
+     * @param bool $forgrading
+     * @return array
+     */
     function get_user_mails($userid=null, $forgrading=false) {
         global $CFG, $USER, $DB;
 
@@ -437,7 +464,11 @@ class mailbox {
         return $DB->get_records_sql($sql);
     }
 
-    // Assign mail to student the first time the student access the assignment, or add a mail if a student lacks any.
+    /**
+     * Assign mails to student the first time he/she access the mailbox view, or add a mail if a student lacks any
+     *
+     * @param int $signedmaildiff
+     */    
     function assign_student_mails($signedmaildiff=0) {
         global $CFG, $USER, $DB;
 
@@ -479,6 +510,11 @@ class mailbox {
         }
     }
 
+    /**
+     * Continiously delete all mail's children (i.e. replies) 
+     *
+     * @param int $mailid
+     */
     function delete_mail_and_children($mailid) {
         global $DB;
 
@@ -494,6 +530,11 @@ class mailbox {
         }
     }
 
+    /**
+     * Delete a single mail and its attachments
+     *
+     * @param int $mailid
+     */
     function delete_mail($mailid) {
         global $CFG, $DB;
 
@@ -508,6 +549,12 @@ class mailbox {
         $DB->delete_records('assignsubmission_mail_mail', array('id' => $mailid));
     }
 
+    /**
+     * Update the info whether the mail is put to trash or not.
+     *
+     * @param int $mailid
+     * @param bool $delete
+     */
     function handle_trash($mailid, $delete=true) {
         global $DB;
 
@@ -523,6 +570,12 @@ class mailbox {
         $DB->set_field('assignsubmission_mail_tmplt', 'deleted', $status, array('id' => $tid));
     }
 
+    /**
+     * Get id of the top parent mail for the given mail.
+     *
+     * @param int $mailid
+     * @return int
+     */
     function get_top_parent_id($mailid) {
         global $DB;
 
@@ -535,6 +588,12 @@ class mailbox {
         return $mailid;
     }
 
+    /**
+     * Retrieve the priority string based on priority number 
+     *
+     * @param int $prionumb
+     * @return string
+     */
     function get_prio_string($prionumb) {
 
         switch ($prionumb) {
@@ -552,6 +611,12 @@ class mailbox {
         return $prio;
     }
 
+    /**
+     * Redirects to template editing view
+     *
+     * @param int $mailid
+     * @param int $gid
+     */
     function add_template($mailid=0, $gid=0) {
         global $CFG;
 
@@ -561,12 +626,21 @@ class mailbox {
         }
     }
 
+    /**
+     * Redirects to contacts editing view
+     */
     function add_contacts() {
         global $CFG;
 
         redirect($CFG->wwwroot . '/mod/assign/submission/mailsimulator/contacts.php?id=' . $this->cm->id, 'Add a contact', 1);
     }
 
+    /**
+     * Redirects to mail editing view
+     *
+     * @param int $tid
+     * @param int $gid
+     */
     function add_mail($tid=0, $gid=0) {
         global $CFG;
 
@@ -574,6 +648,11 @@ class mailbox {
             $tid . '&gid=' . $gid, 'Add a mail', 1);
     }
 
+    /**
+     * Calculate the randgroup number to assign a given template to
+     *
+     * @return int 
+     */
     function calculate_group() {
         global $CFG, $DB;
 
@@ -619,6 +698,11 @@ class mailbox {
         return $submission;
     }
 
+    /**
+     * Update the information about user's submission
+     *
+     * @param int $userid
+     */
     function update_user_submission($userid) {
         global $DB;
 
@@ -631,7 +715,11 @@ class mailbox {
         }
     }
 
-    // Tabs for the header.
+    /**
+     * Print header tabs for teacher view and highlight the current one
+     *
+     * @param string $current
+     */
     function print_tabs($current='mail') {
         global $CFG, $DB, $OUTPUT;
 
@@ -658,6 +746,11 @@ class mailbox {
         print_tabs($tabs, $current);
     }
 
+    /**
+     * Delete a dummy mail contact
+     *
+     * @param int $contactid
+     */
     function delete_contact($contactid) {
         global $CFG, $DB, $OUTPUT;
 
@@ -676,6 +769,14 @@ class mailbox {
         }
     }
 
+    /**
+     * Prepare a mail object with some prefilled data based on given params
+     *
+     * @param int $parent
+     * @param int $from
+     * @param int $priority
+     * @return stdClass
+     */
     function prepare_mail($parent=0, $from=0, $priority=0) {
         global $USER, $CFG, $DB;
 
@@ -724,6 +825,13 @@ class mailbox {
         return $mail;
     }
 
+    /**
+     * Prepare a template object for given mail
+     *
+     * @param int $mailid
+     * @param int $group
+     * @return stdClass
+     */
     function prepare_parent($mailid=0, $group=0) {
         global $DB;
 
@@ -752,6 +860,12 @@ class mailbox {
         return $templatemail;
     }
 
+    /**
+     * Get nested mail thread from child (looking up for top parent mail)
+     *
+     * @param stdClass $mailobj
+     * @return string
+     */
     function get_nested_from_child($mailobj) {
         global $CFG, $DB;
         $message = '<div class="mailmessage">' . format_text(unserialize($mailobj->message)['text'], FORMAT_MOODLE);
@@ -774,6 +888,13 @@ class mailbox {
         return $message;
     }
 
+    /**
+     * Get nested reply objects or false if there is no reply
+     *
+     * @param stdClass $mailobj
+     * @param bool $editbuttons
+     * @return mixed bool if no replies | stdClass with reply mail
+     */
     function get_nested_reply_object($mailobj, $editbuttons=false) {
         global $CFG, $DB, $OUTPUT;
 
@@ -852,6 +973,13 @@ class mailbox {
         return $mailobj;
     }
 
+    /**
+     * Get string with sender firstname, lastname and email
+     *
+     * @param stdClass $mailobj
+     * @param bool $long
+     * @return string
+     */
     function get_sender_string($mailobject, $long=false) {
         global $USER, $DB;
 
@@ -873,6 +1001,12 @@ class mailbox {
         return $from;
     }
 
+    /**
+     * Get string with recipients for this mail, returns the first recipient
+     *
+     * @param int $mailid
+     * @return string
+     */
     function get_recipients_string($mailid) {
         global $USER, $DB;
 
@@ -924,6 +1058,9 @@ class mailbox {
         return $firsttoname;
     }
 
+    /**
+     * Student mailbox view
+     */
     function view_mailbox() {
         global $CFG, $USER, $OUTPUT;
 
@@ -1069,6 +1206,11 @@ class mailbox {
         </div>';
     }
 
+    /**
+     * Output the sidebar for student mailbox view
+     *
+     * @return string
+     */
     function sidebar() {
         global $CFG;
 
@@ -1086,6 +1228,11 @@ class mailbox {
         return $sidebarstr;
     }
 
+    /**
+     * Output the topbar for student mailbox view
+     *
+     * @return string
+     */
     function topbar() {
         global $CFG;
 
@@ -1172,6 +1319,14 @@ class mailbox {
         return $topmenu;
     }
 
+    /**
+     * Output the header of the mail in student mailbox view with attachment icons
+     *
+     * @param stdClass $obj
+     * @param string $link
+     * @param bool $attachment
+     * @return string
+     */
     function mail_header($obj, $link='#', $attachment = false) {
         global $USER, $CFG;
 
@@ -1218,7 +1373,12 @@ class mailbox {
         return $header;
     }
 
-    // Get the status from user signedout mail: 0 = unread, 1 = read, 2 = replied.
+    /**
+     * Get the status from user signedout mail: 0 = unread, 1 = read, 2 = replied
+     *
+     * @param int $mailid
+     * @return stdClass
+     */
     function get_mail_status($mailid) {
         global $USER, $DB;
 
@@ -1241,12 +1401,24 @@ class mailbox {
         return $statusobj;
     }
 
+    /**
+     * Get the status from user signedout mail: 0 = unassigned, 1 = assigned to students
+     *
+     * @param int $mailid
+     * @return bool
+     */
     function get_signed_out_status($mailid) {
         global $DB;
 
         return $DB->record_exists('assignsubmission_mail_sgndml', array('mailid' => $mailid));
     }
 
+    /**
+     * Get the image for mail status from user signedout mail: 0 = unread, 1 = read, 2 = replied
+     *
+     * @param int $status
+     * @return string
+     */
     function get_mail_status_img($status) {
         global $CFG;
 
@@ -1269,6 +1441,13 @@ class mailbox {
         return $status;
     }
 
+    /**
+     * Set the status for user signedout mail: 0 = unread, 1 = read, 2 = replied
+     *
+     * @param int $mailid
+     * @param int $newstatus
+     * @return int
+     */
     function set_mail_status($mailid, $newstatus) {
         global $USER, $DB;
 
@@ -1281,6 +1460,13 @@ class mailbox {
         return $newstatus;
     }
 
+    /**
+     * Get the body of the mail sent by student
+     *
+     * @param stdClass $mailobject
+     * @param bool $sentview
+     * @return string
+     */
     function mail_body($mailobject, $sentview = false) {
         global $CFG;
 
@@ -1302,6 +1488,12 @@ class mailbox {
         return $bodystr;
     }
 
+    /**
+     * Get the mails sent by student sorted by timesent
+     *
+     * @param int $userid
+     * @return array
+     */
     function get_user_sent($userid=null) {
         global $USER, $DB;
 
@@ -1316,7 +1508,14 @@ class mailbox {
     }
 
 
-    // Create a new mail and return the id or false.
+    /**
+     * Insert a new mail and return the id or false
+     *
+     * @param stdClass $mail
+     * @param int $gid
+     * @return mixed int id of the inserted mail | bool false if not inserted
+     */
+    // 
     function insert_mail($mail, $gid=0) {
         global $CFG, $DB;
 
@@ -1339,7 +1538,11 @@ class mailbox {
         return false;
     }
 
-
+    /**
+     * Update the given mail in database
+     *
+     * @param stdClass $mail
+     */
     function update_mail($mail) {
         global $DB;
 
@@ -1360,7 +1563,14 @@ class mailbox {
         $DB->update_record('assignsubmission_mail_mail', $mail);
     }
 
-    // Function for sorting mails.
+    /**
+     * Function for sorting mails in array
+     *
+     * @param array $array
+     * @param string $id
+     * @param bool $sort_ascending
+     * @return array
+     */
     function vsort($array, $id="id", $sort_ascending=true) {
         $temp_array = array();
 
@@ -1390,11 +1600,24 @@ class mailbox {
         }
     }
 
-    // Return a config value for this mailsimulator plugin.
+    /**
+     * Return a config value for this mailsimulator plugin instance
+     *
+     * @param string $config
+     * @return mixed string|int
+     */
     function get_config($config) {
         return $this->plugininstance->get_config($config);
     }
 
+    /**
+     * Partial grading view for teacher (feedback giving view). Outputs student's mails and provides tool for teacher
+     * to write comments and give weigths. Also used for downloading a student's submission.
+     *
+     * @param int $userid
+     * @param bool $teacher
+     * @param bool $download
+     */
     function view_grading_feedback($userid=null, $teacher=true, $download=false) {
         global $CFG, $DB, $OUTPUT, $USER, $COURSE;
 
@@ -1646,6 +1869,14 @@ class mailbox {
         }
     }
 
+    /**
+     * Get replies the student has made on his/her own mail (recursive replies).
+     *
+     * @param array $arr
+     * @param array &$tmp
+     * @param int $userid
+     * @return array
+     */
     function get_recursive_replies($arr, &$tmp, $userid) {
         global $DB;
 

@@ -66,6 +66,7 @@ if ($mid) {
             . $cm->id);
     }
 
+    // Fill the form with mail's data, if we edit a mail.
     $teacherid = $mailboxinstance->get_config('teacherid');
     $contacts = $DB->get_records('assignsubmission_mail_cntct', array('assignment' => $cm->instance));
     $senttoobjarr = $DB->get_records('assignsubmission_mail_to', array('mailid' => $mid), 'contactid');
@@ -168,7 +169,7 @@ if ($mailform->is_cancelled()) {
         }
 
         if ($attachmentenabled) {
-            // Check if attachments exist in draft area, if yes, set 'attachment=1'.
+            // Check if attachments exist in draft area, if yes, set 'attachment=1' and save them.
             $info = file_get_draft_area_info($fromform->attachment);
             $present = ($info['filecount']>0) ? '1' : '';
             file_save_draft_area_files($fromform->attachment, $context->id, 'assignsubmission_mailsimulator', 'attachment',
@@ -226,7 +227,7 @@ if ($mailform->is_cancelled()) {
     $mailform->display();
 }
 
-// Display footer of mail composing form.
+// Display the end of mail composing form.
 echo '                      </td>';
 echo '                  </tr>';
 echo '              </table>';
