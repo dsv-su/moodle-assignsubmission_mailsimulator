@@ -72,7 +72,7 @@ if ($mform->is_cancelled()) {
                 }
             }
         }
-        redirect($CFG->wwwroot . '/mod/assign/submission/mailsimulator/contacts.php?id=' . $cm->id);
+        redirect($CFG->wwwroot . '/mod/assign/submission/mailsimulator/mailbox.php?id=' . $cm->id);
     }
 
 } else {

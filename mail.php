@@ -161,7 +161,9 @@ if ($mailform->is_cancelled()) {
         if (!$attachmentenabled) {
             $fromform->attachment = 0; // Prevents error when writing to DB when attachments are disabled.
         }
+        
         if ($DB->record_exists('assignsubmission_mail_mail', array('id' => $fromform->mailid))) {
+            $existingattachment = $DB->get_field('assignsubmission_mail_mail', 'attachment', array('id' => $fromform->mailid));
             $mailboxinstance->update_mail($fromform);
             $currentmailid = $fromform->id; // We went back to original naming: id stands for mailid.
         } else {
@@ -170,11 +172,16 @@ if ($mailform->is_cancelled()) {
 
         if ($attachmentenabled) {
             // Check if attachments exist in draft area, if yes, set 'attachment=1' and save them.
-            $info = file_get_draft_area_info($fromform->attachment);
-            $present = ($info['filecount']>0) ? '1' : '';
-            file_save_draft_area_files($fromform->attachment, $context->id, 'assignsubmission_mailsimulator', 'attachment',
-                   $currentmailid, $fileoptions);
-            $DB->set_field('assignsubmission_mail_mail', 'attachment', $present, array('id'=>$currentmailid));
+            // If attachment is enabled, but filemanager has been disabled, then we save existing value from DB.
+            if (isset($fromform->attachment)) {
+                $info = file_get_draft_area_info($fromform->attachment);
+                $present = ($info['filecount']>0) ? '1' : '';
+                file_save_draft_area_files($fromform->attachment, $context->id, 'assignsubmission_mailsimulator', 'attachment',
+                       $currentmailid, $fileoptions);
+                $DB->set_field('assignsubmission_mail_mail', 'attachment', $present, array('id'=>$currentmailid));
+            } else {
+                $DB->set_field('assignsubmission_mail_mail', 'attachment', $existingattachment, array('id'=>$currentmailid));
+            }
         }
 
         // Here add_template used to be called.

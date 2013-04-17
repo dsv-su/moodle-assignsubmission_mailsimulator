@@ -44,6 +44,11 @@ class contacts_form extends moodleform {
         $repeatarray[] = $mform->createElement('text', 'lastname', get_string('lastname'));
         $repeatarray[] = $mform->createElement('text', 'email', get_string('email'));
 
+        $mform->setType('contactid', PARAM_INT);
+        $mform->setType('firstname', PARAM_TEXT);
+        $mform->setType('lastname', PARAM_TEXT);
+        $mform->setType('email', PARAM_EMAIL);
+
         $repeatno = $DB->count_records('assignsubmission_mail_cntct', array("assignment"=>$cm->instance));
         $repeatno = $repeatno == 0 ? 1 : $repeatno;
         $this->repeat_elements($repeatarray, $repeatno, array(), 'option_repeats',
