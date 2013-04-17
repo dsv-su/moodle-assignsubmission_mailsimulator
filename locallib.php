@@ -84,7 +84,10 @@ class assign_submission_mailsimulator extends assign_submission_plugin {
         $mform->setDefault('assignsubmission_mailsimulator_filesubmissions', $filesubmissionsdefault);
         $mform->addHelpButton('assignsubmission_mailsimulator_filesubmissions', 'filesubmissions',
             'assignsubmission_mailsimulator');
-        $mform->disabledIf('assignsubmission_mailsimulator_filesubmissions', 'assignsubmission_mailsimulator_enabled', 'notchecked');
+        // Moodle 2.5.
+        // $mform->disabledIf('assignsubmission_mailsimulator_filesubmissions', 'assignsubmission_mailsimulator_enabled', 'notchecked');
+        // Moodle 2.4.
+        $mform->disabledIf('assignsubmission_mailsimulator_filesubmissions', 'assignsubmission_mailsimulator_enabled', 'eq', 0);
 
         // Set up max weight per mail.
         $maxweightoptions = array();
@@ -97,6 +100,10 @@ class assign_submission_mailsimulator extends assign_submission_plugin {
         $mform->setDefault('assignsubmission_mailsimulator_maxweight', $maxweightdefault);
         $mform->addHelpButton('assignsubmission_mailsimulator_maxweight', 'maxweight', 'assignsubmission_mailsimulator');
         $mform->disabledIf('assignsubmission_mailsimulator_maxweight', 'assignsubmission_mailsimulator_enabled', 'notchecked');
+        // Moodle 2.5.
+        // $mform->disabledIf('assignsubmission_mailsimulator_maxweight', 'assignsubmission_mailsimulator_enabled', 'notchecked');
+        // Moodle 2.4.
+        $mform->disabledIf('assignsubmission_mailsimulator_maxweight', 'assignsubmission_mailsimulator_enabled', 'eq', 0);
 
         // Set up number of mails for this assignment.
         $mailsoptions = array();
@@ -109,7 +116,10 @@ class assign_submission_mailsimulator extends assign_submission_plugin {
             $mailsoptions);
         $mform->setDefault('assignsubmission_mailsimulator_mailnumber', $mailnumberdefault);
         $mform->addHelpButton('assignsubmission_mailsimulator_mailnumber', 'defaultnumbermails', 'assignsubmission_mailsimulator');
-        $mform->disabledIf('assignsubmission_mailsimulator_mailnumber', 'assignsubmission_mailsimulator_enabled', 'notchecked');
+        // Moodle 2.5.
+        // $mform->disabledIf('assignsubmission_mailsimulator_mailnumber', 'assignsubmission_mailsimulator_enabled', 'notchecked');
+        // Moodle 2.4.
+        $mform->disabledIf('assignsubmission_mailsimulator_mailnumber', 'assignsubmission_mailsimulator_enabled', 'eq', 0);
 
         // Set up max attachment size.
         if (isset($CFG->maxbytes)) {
@@ -118,7 +128,10 @@ class assign_submission_mailsimulator extends assign_submission_plugin {
                 get_max_upload_sizes($CFG->maxbytes));
             $mform->setDefault('assignsubmission_mailsimulator_maxbytes', $maxbytesdefault);
             $mform->addHelpButton('assignsubmission_mailsimulator_maxbytes', 'maxattachments', 'assignsubmission_mailsimulator');
-            $mform->disabledIf('assignsubmission_mailsimulator_maxbytes', 'assignsubmission_mailsimulator_enabled', 'notchecked');
+            // Moodle 2.5.
+            // $mform->disabledIf('assignsubmission_mailsimulator_maxbytes', 'assignsubmission_mailsimulator_enabled', 'notchecked');
+            // Moodle 2.4.
+            $mform->disabledIf('assignsubmission_mailsimulator_maxbytes', 'assignsubmission_mailsimulator_enabled', 'eq', 0);
         }
 
         // Set up teacher contact id.
@@ -138,7 +151,10 @@ class assign_submission_mailsimulator extends assign_submission_plugin {
             $teachers);
         $mform->setDefault('assignsubmission_mailsimulator_teacherid', $teacherdefault);
         $mform->addHelpButton('assignsubmission_mailsimulator_teacherid', 'teacherid', 'assignsubmission_mailsimulator');
-        $mform->disabledIf('assignsubmission_mailsimulator_teacherid', 'assignsubmission_mailsimulator_enabled', 'notchecked');
+        // Moodle 2.5.
+        // $mform->disabledIf('assignsubmission_mailsimulator_teacherid', 'assignsubmission_mailsimulator_enabled', 'notchecked');
+        // Moodle 2.4.
+        $mform->disabledIf('assignsubmission_mailsimulator_teacherid', 'assignsubmission_mailsimulator_enabled', 'eq', 0);
 
         if ($cmid>0) {
             $mailadminlink = html_writer::link(new moodle_url('/mod/assign/submission/mailsimulator/mailbox.php',
