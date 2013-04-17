@@ -99,7 +99,6 @@ class assign_submission_mailsimulator extends assign_submission_plugin {
             $maxweightoptions);
         $mform->setDefault('assignsubmission_mailsimulator_maxweight', $maxweightdefault);
         $mform->addHelpButton('assignsubmission_mailsimulator_maxweight', 'maxweight', 'assignsubmission_mailsimulator');
-        $mform->disabledIf('assignsubmission_mailsimulator_maxweight', 'assignsubmission_mailsimulator_enabled', 'notchecked');
         // Moodle 2.5.
         // $mform->disabledIf('assignsubmission_mailsimulator_maxweight', 'assignsubmission_mailsimulator_enabled', 'notchecked');
         // Moodle 2.4.
