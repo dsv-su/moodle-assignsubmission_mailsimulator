@@ -57,8 +57,8 @@ if ($mid) {
         $mail->message = unserialize($mail->message)["text"];
     }
 
-    $mailstr = '<div style="background-color:#ffffff; margin:auto; margin-bottom: 20px; padding:5px; border:1px;
-        border-style:solid; border-color:#999999; width:80%">' . format_text(($mail->message), FORMAT_MOODLE) . '</div>';
+    $mailstr = html_writer::tag('div', format_text(($mail->message), FORMAT_MOODLE) , array('style' => 'background-color:#ffffff;
+        margin:auto; margin-bottom: 20px; padding:5px; border:1px; border-style:solid; border-color:#999999; width:80%;'));
 
     $customdata = $mailboxinstance->prepare_parent($mid, $gid);
 } else {

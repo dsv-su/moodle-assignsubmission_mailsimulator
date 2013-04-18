@@ -112,9 +112,8 @@ if ($tid) { // If a student replies to or forward a mail.
         error("Mail ID is incorrect");
     }
     $message = $mailboxinstance->get_nested_from_child($mailobj);
-    $mailstr = '<div style="background-color:#ffffff; margin:10px; padding:5px; border:1px;
-        border-style:solid; border-color:#999999;">' . $message . '</div>';
-
+    $mailstr = html_writer::tag('div', $message , array('style' => 'background-color:#ffffff; margin:10px; padding:5px; border:1px;
+        border-style:solid; border-color:#999999;'));
     if ($re == 3) {
         $customdata->subject = get_string('fwd', 'assignsubmission_mailsimulator') . $mailobj->subject;
         $titlestr = get_string('fwd', 'assignsubmission_mailsimulator') . ' ' . $mailobj->subject;
@@ -205,62 +204,68 @@ if ($mailform->is_cancelled()) {
     }
 
     // Display the mail composing form.
+    ob_start();
+    $mailform->display();
+    $o = ob_get_contents();
+    ob_end_clean();
+
     $imgurl = $CFG->wwwroot . '/mod/assign/submission/mailsimulator/pix/';
 
-    echo '<div style="width:80%; margin: auto">';
-    echo '  <!-- Start Window Top Table -->';
-    echo '  <table border="0" width="100%"  style="margin-bottom: -4px;">';
-    echo '      <tr>';
-    echo '          <td width="32px"><img src="' . $imgurl . 'shadow-top-left.png"></td>';
-    echo '          <td width="8"><img src="' . $imgurl . 'window-top-left.png"></td>';
-    echo '          <td class="window-top-bg"><div class="mailtoptitle">' . $titlestr . '</div></td>';
-    echo '          <td width="8"><img src="' . $imgurl . 'window-top-right.png"></td>';
-    echo '          <td width="32px"><img src="' . $imgurl . 'shadow-top-right.png"></td>';
-    echo '      </tr>';
-    echo '  </table>';
-    echo '  <!-- End Window Top Table -->';
+    echo html_writer::start_tag('div', array('style' => 'width:80%; margin: auto'));
+   
+    // Window top table.
+    echo html_writer::tag('table', 
+        html_writer::tag('tr', 
+            html_writer::tag('td', 
+                html_writer::tag('img', '', array('src' => $imgurl . 'shadow-top-left.png')), array('width' => '32px')) .
+            html_writer::tag('td', 
+                html_writer::tag('img', '', array('src' => $imgurl . 'window-top-left.png')), array('width' => '8px')) .
+            html_writer::tag('td', 
+                html_writer::tag('div', $titlestr, array('class' => 'mailtoptitle')), array('class' => 'window-top-bg')) .
+            html_writer::tag('td', 
+                html_writer::tag('img', '', array('src' => $imgurl . 'window-top-right.png')), array('width' => '8px')) .
+            html_writer::tag('td', 
+                html_writer::tag('img', '', array('src' => $imgurl . 'shadow-top-right.png')), array('width' => '32px'))
+        )
+        , array('border' => 0, 'width' => '100%', 'style' => 'margin-bottom: -4px;')
+    );
 
-    echo '  <!-- Start Window Content Table -->';
-    echo '  <table border="0" width="100%" style="margin-bottom:0em;">';
-    echo '      <tr>';
-    echo '          <td width="32px" class="shadow-left-bg"></td>';
-    echo '          <td >';
-    echo '              <table class="mailmidletable" width="100%" style="margin-bottom:0em;">';
-    echo '                  <tr>';
-    echo '                      <td style="background-color:lightgray;">' . $mailstr;
+    // Window content table.
+    echo html_writer::tag('table',
+        html_writer::tag('tr',
+            html_writer::tag('td', '', array('width' => '32px', 'class' => 'shadow-left-bg')) .
+            html_writer::tag('td',
+                html_writer::tag('table',
+                    html_writer::tag('tr',
+                        html_writer::tag('td', $mailstr . $o, array('style' => 'background-color: lightgray'))
+                        ), array('class' => 'mailmidletable', 'width' => '100%', 'style' => 'margin-bottom: 0em;'))) .
+            html_writer::tag('td', '', array('width' => '32px', 'class' => 'shadow-right-bg'))
+        )
+        , array('border' => 0, 'width' => '100%', 'style' => 'margin-bottom: 0em;')
+    );
 
+    // Window bottom table.
+    echo html_writer::tag('table',
+        html_writer::tag('tr',
+            html_writer::tag('td', 
+                html_writer::tag('img', '', array('src' => $imgurl . 'shadow-bottom-left.png')), array('width' => '32px')) .
+            html_writer::tag('td',
+                html_writer::tag('table',
+                    html_writer::tag('tr',
+                        html_writer::tag('td', 
+                            html_writer::tag('img', '', array('src' => $imgurl . 'shadow-bottom-center-left.png'))
+                            , array('width' => '32px')) .
+                        html_writer::tag('td', '&nbsp;', array('class' => 'shadow-bottom-bg')) .
+                        html_writer::tag('td', 
+                            html_writer::tag('img', '', array('src' => $imgurl . 'shadow-bottom-center-right.png'))
+                            , array('width' => '32px'))
+                        ), array('width' => '100%', 'border' => '0'))) .
+            html_writer::tag('td', 
+                html_writer::tag('img', '', array('src' => $imgurl . 'shadow-bottom-right.png')), array('width' => '32px')))
+        , array('border' => 0, 'width' => '100%')
+    );
 
-    // Display the form.
-    $mailform->display();
+    echo html_writer::end_tag('div');
 }
-
-// Display the end of mail composing form.
-echo '                      </td>';
-echo '                  </tr>';
-echo '              </table>';
-echo '          </td>';
-echo '          <td width="32px" class="shadow-right-bg"></td>';
-echo '      </tr>';
-echo '  </table>';
-echo '  <!-- End Window Content Table -->';
-
-echo '  <!-- Start Bottom Shadow Table -->';
-echo '  <table border="0"  width="100%">';
-echo '      <tr>';
-echo '          <td width="32px"><img src="' . $imgurl . 'shadow-bottom-left.png"></td>';
-echo '          <td>';
-echo '              <table border="0"  width="100%">';
-echo '                  <tr>';
-echo '                      <td width="32px"><img src="' . $imgurl . 'shadow-bottom-center-left.png"></td>';
-echo '                      <td class="shadow-bottom-bg">&nbsp;</td>';
-echo '                      <td width="32px"><img src="' . $imgurl . 'shadow-bottom-center-right.png"></td>';
-echo '                  </tr>';
-echo '              </table>';
-echo '          </td>';
-echo '          <td width="32px"><img src="' . $imgurl . 'shadow-bottom-right.png"></td>';
-echo '      </tr>';
-echo '  </table>';
-echo '  <!-- End Bottom Shadow Table -->';
-echo '</div>';
 
 echo $OUTPUT->footer();

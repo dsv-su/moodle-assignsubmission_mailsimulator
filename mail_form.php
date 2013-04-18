@@ -63,7 +63,7 @@ class mail_form extends moodleform {
 
             $replyobj = $DB->get_record('assignsubmission_mail_mail', array('id' => $this->_customdata->parent));
 
-            // Reply To All --------- or forward.
+            // Reply To all or forward.
             if ($this->_customdata->reply > 1) {
                 $toarr = $DB->get_records('assignsubmission_mail_to', array('mailid' => $this->_customdata->parent));
                 foreach ($toarr as $value) {

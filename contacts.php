@@ -26,9 +26,9 @@
 require_once(dirname(__FILE__).'/../../../../config.php');
 global $CFG, $DB, $PAGE, $COURSE;
 
-$id     = required_param('id', PARAM_INT);
-$cm     = get_coursemodule_from_id('assign', $id, 0, false, MUST_EXIST);
-$course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
+$id      = required_param('id', PARAM_INT);
+$cm      = get_coursemodule_from_id('assign', $id, 0, false, MUST_EXIST);
+$course  = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
 $context = context_module::instance($cm->id);
 
 require_login($course);

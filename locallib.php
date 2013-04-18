@@ -288,6 +288,7 @@ class assign_submission_mailsimulator extends assign_submission_plugin {
         $cm         = get_coursemodule_from_id('assign', $id, 0, false, MUST_EXIST);
         $course     = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
         $context    = context_module::instance($cm->id);
+        
         require_once($CFG->dirroot.'/mod/assign/submission/mailsimulator/mailbox_class.php');
         $mailboxinstance = new mailbox($context, $cm, $course);
         $assigninstance = new assign($context, $cm, $course);

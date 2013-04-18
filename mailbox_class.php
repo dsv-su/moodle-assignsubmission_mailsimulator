@@ -762,7 +762,8 @@ class mailbox {
         if ($active) {
             $contact = $DB->get_record('assignsubmission_mail_cntct', array('id' => $contactid));
             $msg = get_string('contactinuse', 'assignsubmission_mailsimulator');
-            $msg .= '<br />' . $contact->firstname . ' ' . $contact->lastname . ' &lt;' . $contact->email . '&gt<br />';
+            $msg .= html_writer::empty_tag('br') . $contact->firstname . ' ' . $contact->lastname; 
+            $msg .= ' &lt;' . $contact->email . '&gt' . html_writer::empty_tag('br');
             echo $OUTPUT->error_text($msg);
         } else {
             $DB->delete_records('assignsubmission_mail_cntct', array('id' => $contactid));
@@ -916,6 +917,7 @@ class mailbox {
         foreach ($replies as $m) {
             if ($divcount == 0) {
                 $replystr .= '<div class="mailmessage">';
+                $mailobj = new stdClass();
                 $mailobj->id = $m->id;
                 $mailobj->subject = $m->subject;
                 $mailobj->timesent = $m->timesent;
@@ -952,7 +954,7 @@ class mailbox {
             $mailobj->attachment = $m->attachment;
             $divcount++;
         }
-        for ($i = 0; $i < count($replys); $i++) {
+        for ($i = 0; $i < count($replies); $i++) {
             $replystr .= '</div>';
         }
 
