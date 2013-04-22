@@ -469,7 +469,7 @@ class mailbox {
      *
      * @param int $signedmaildiff
      */    
-    function assign_student_mails($signedmaildiff=0) {
+    function assign_student_mails($studentmails = NULL) {
         global $CFG, $USER, $DB;
 
         $sql = 'SELECT m.id, t.randgroup FROM {assignsubmission_mail_mail} AS m
@@ -487,8 +487,9 @@ class mailbox {
             $groupedtemplatesids[$value->randgroup][] = $value->id;
         }
 
-        for ($i=0; $i<$signedmaildiff; $i++) {
-            unset($groupedtemplatesids[$i+1]);
+        foreach ($studentmails as $m) {
+            $studentsignedgroup = $DB->get_field('assignsubmission_mail_tmplt', 'randgroup', array('mailid' => $m->id));
+            unset($groupedtemplatesids[$studentsignedgroup]);
         }
 
         foreach ($groupedtemplatesids as $key => $value) {
@@ -1106,7 +1107,7 @@ class mailbox {
                 if (!$templatemailarr) {
                     $this->assign_student_mails();
                 } else {
-                    $this->assign_student_mails($mailgroupnumber-$mailsignedcount);
+                    $this->assign_student_mails($templatemailarr);
                 }
                 redirect($CFG->wwwroot . '/mod/assign/submission/mailsimulator/mailbox.php?id=' . $this->cm->id, '', 0);
             }
@@ -1685,7 +1686,7 @@ class mailbox {
         if ($signedoutarr) {
             foreach ($signedoutarr as $mailobj) {
                 $mailobj->id = $mailobj->mailid;
-                $mailobj->message = '<div class="mailmessage">' . format_text(unserialize($mailobj->message)['text']) .
+                $message = '<div class="mailmessage">' . format_text(unserialize($mailobj->message)['text']) .
                     ($mailobj->attachment>0 ? $this->get_files_str($mailobj->id, $mailobj->userid) : '') . '</div>';
                 unset($mailobj->mailid);
                 $nestedobj = $this->get_nested_reply_object($mailobj);
@@ -1696,6 +1697,8 @@ class mailbox {
                     $mailobj->timesent = $nestedobj->timesent;
                     $mailobj->sender = $nestedobj->sender;
                     $mailobj->message = $nestedobj->message;
+                } else {
+                    $mailobj->message = $message;
                 }
 
                 $select = 'parent = ' . $mailobj->id . ' AND userid = ' . $userid . ' AND assignment = ' . $this->cm->instance;
@@ -1789,8 +1792,8 @@ class mailbox {
                 echo '  <tr style="background:lightgrey">';
                 echo '      <td style="width:200px; padding-left:5px; white-space:nowrap;">' .
                     format_text($mobj->subject) . ' </td>';
-                echo '      <td><p><a id="showhide' . $toggleid . '" href="javascript:toggle(\'teachermail' . $toggleid .
-                    '\',\'showhide' . $toggleid . '\');">' . $show . '</a></p></td>';
+                echo '      <td><a id="showhide' . $toggleid . '" href="javascript:toggle(\'teachermail' . $toggleid .
+                    '\',\'showhide' . $toggleid . '\');">' . $show . '</a></td>';
 
                 if ($teacher && !$download) {
                     echo '<td style="text-align:right">';
@@ -1838,7 +1841,7 @@ class mailbox {
                 }
             }
         } else {
-            echo get_string('noreplies') . '<br />';
+            echo get_string('noreplies', 'assignsubmission_mailsimulator') . '<br />';
         }
 
         if ($newmailarr) {

@@ -79,6 +79,7 @@ $string['medium'] = 'medium';
 $string['message'] = 'Message';
 $string['newmail'] = 'New Mail';
 $string['noanswer'] = 'No Answer';
+$string['noreplies'] = 'No mails have been sent';
 $string['pluginname'] = 'Mail Simulator';
 $string['printed'] = 'Printed';
 $string['priority'] = 'Priority';
