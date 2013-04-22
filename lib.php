@@ -78,8 +78,9 @@ function assignsubmission_mailsimulator_pluginfile($course,
     send_stored_file($file, 0, 0, true); // Download MUST be forced - security!
 }
 
-    /*
-function assign_extend_settings_navigation(settings_navigation $settings, navigation_node $navref) {
-    $link = new moodle_url('/grade/report/grader/index.php', array('id' => $course->id));
-    $node = $navref->add(get_string('viewgradebook', 'assign'), $link, navigation_node::TYPE_SETTING);
-}   */
+    
+function assignsubmission_mailsimulator_extend_settings_navigation(settings_navigation $settings, navigation_node $navref) {
+    $id = optional_param('id', 0, PARAM_INT);
+    $link = new moodle_url('/mod/assign/submission/mailsimulator/mailbox.php', array('id' => $id));
+    $node = $navref->add(get_string('mailadmin', 'assignsubmission_mailsimulator'), $link, navigation_node::TYPE_SETTING);
+}   
