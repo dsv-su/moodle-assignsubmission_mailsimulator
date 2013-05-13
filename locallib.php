@@ -329,6 +329,6 @@ class assign_submission_mailsimulator extends assign_submission_plugin {
         global $DB;
         $usermails = $DB->record_exists('assignsubmission_mail_mail', array('userid' => $submission->userid+0));
         return empty($usermails);
-    }
+    }  
 
 }

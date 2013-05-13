@@ -78,9 +78,15 @@ function assignsubmission_mailsimulator_pluginfile($course,
     send_stored_file($file, 0, 0, true); // Download MUST be forced - security!
 }
 
-    
+/** 
+* Adds a link to navigation settings block.
+*
+* @param settings_navigation $settings
+* @param navigation_node $navref
+* @return void
+*/
 function assignsubmission_mailsimulator_extend_settings_navigation(settings_navigation $settings, navigation_node $navref) {
     $id = optional_param('id', 0, PARAM_INT);
     $link = new moodle_url('/mod/assign/submission/mailsimulator/mailbox.php', array('id' => $id));
     $node = $navref->add(get_string('mailadmin', 'assignsubmission_mailsimulator'), $link, navigation_node::TYPE_SETTING);
-}   
+} 

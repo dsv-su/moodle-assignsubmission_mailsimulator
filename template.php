@@ -34,6 +34,7 @@ $course  = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST
 $context = context_module::instance($cm->id);
 
 require_login($course);
+require_capability('mod/assign:grade', $context);
 
 require_once($CFG->dirroot.'/mod/assign/submission/mailsimulator/mailbox_class.php');
 $mailboxinstance = new mailbox($context, $cm, $course);

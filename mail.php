@@ -48,13 +48,16 @@ $PAGE->set_cm($cm);
 
 require_once($CFG->dirroot.'/mod/assign/submission/mailsimulator/mailbox_class.php');
 $mailboxinstance = new mailbox($context, $cm, $course);
+$assigninstance = new assign($context, $cm, $course);
 
 $teacher = has_capability('mod/assign:grade', $context);
 
+if (!$teacher && !$assigninstance->is_open) {
+    error('The assignment is closed');
+}
+
 if ($mid) {
-    if (!$teacher) {
-        error('Unauthorized access');
-    }
+    require_capability('mod/assign:grade', $context);
 
     $customdata = $DB->get_record('assignsubmission_mail_mail', array('id' => $mid));
     if (!$customdata) {
@@ -107,7 +110,6 @@ $titlestr = get_string('newmail', 'assignsubmission_mailsimulator');
 $mailstr = '';
 
 if ($tid) { // If a student replies to or forward a mail.
-
     if (!$mailobj = $DB->get_record('assignsubmission_mail_mail', array('id' => $tid))) {
         error("Mail ID is incorrect");
     }

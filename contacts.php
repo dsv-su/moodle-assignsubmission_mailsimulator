@@ -32,6 +32,7 @@ $course  = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST
 $context = context_module::instance($cm->id);
 
 require_login($course);
+require_capability('mod/assign:grade', $context);
 
 $PAGE->set_url('/mod/assign/submission/mailsimulator/contacts.php', array('id' => $id));
 $PAGE->set_title('Contacts');
