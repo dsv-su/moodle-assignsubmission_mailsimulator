@@ -82,7 +82,7 @@ class mailbox {
                 $this->view_assignment_mails();
             }
         } else {
-            if (isopen()) {
+            if ($this->isopen()) {
                 error('The submissions are closed');
             } else if (!$existingsubmission) {
                 $this->update_user_submission($USER->id);
