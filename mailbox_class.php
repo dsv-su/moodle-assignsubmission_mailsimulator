@@ -489,9 +489,11 @@ class mailbox {
             $groupedtemplatesids[$value->randgroup][] = $value->id;
         }
 
-        foreach ($studentmails as $m) {
-            $studentsignedgroup = $DB->get_field('assignsubmission_mail_tmplt', 'randgroup', array('mailid' => $m->id));
-            unset($groupedtemplatesids[$studentsignedgroup]);
+        if ($studentmails) {
+            foreach ($studentmails as $m) {
+                $studentsignedgroup = $DB->get_field('assignsubmission_mail_tmplt', 'randgroup', array('mailid' => $m->id));
+                unset($groupedtemplatesids[$studentsignedgroup]);
+            }
         }
 
         foreach ($groupedtemplatesids as $key => $value) {
