@@ -82,7 +82,7 @@ class mailbox {
                 $this->view_assignment_mails();
             }
         } else {
-            if (!$this->assigninstance->isopen){
+            if (isopen()) {
                 error('The submissions are closed');
             } else if (!$existingsubmission) {
                 $this->update_user_submission($USER->id);
@@ -1901,6 +1901,15 @@ class mailbox {
             $tmp[$value->id] = $value;
         }
         return $tmp;
+    }
+
+    function isopen() {
+        $time = time();
+        if ($this->assigninstance->preventlate && $this->assigninstance->timedue) {
+            return ($this->assigninstance->timeavailable <= $time && $time <= $this->assigninstance->timedue);
+        } else {
+            return ($this->assigninstance->timeavailable <= $time);
+        }
     }
 
 }
