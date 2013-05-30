@@ -55,7 +55,6 @@ class mailbox {
      */
     function view() {
         global $OUTPUT, $USER, $DB;
-
         $existingsubmission = $this->user_have_registered_submission($USER->id, $this->cm->instance);
         $route = optional_param('route', 0, PARAM_INT);
         $delete = optional_param('delete', 0, PARAM_INT);
@@ -82,7 +81,7 @@ class mailbox {
                 $this->view_assignment_mails();
             }
         } else {
-            if ($this->isopen()) {
+            if (!$this->isopen()){
                 error('The submissions are closed');
             } else if (!$existingsubmission) {
                 $this->update_user_submission($USER->id);
@@ -1904,11 +1903,17 @@ class mailbox {
     }
 
     function isopen() {
+        global $DB;
+
         $time = time();
-        if ($this->assigninstance->preventlate && $this->assigninstance->timedue) {
-            return ($this->assigninstance->timeavailable <= $time && $time <= $this->assigninstance->timedue);
+        $duedate = $DB->get_field('assign', 'duedate', array('id' => $this->cm->instance));
+        $allowsubmissionsfromdate = $DB->get_field('assign', 'allowsubmissionsfromdate', array('id' => $this->cm->instance));
+        $cutoffdate = $DB->get_field('assign', 'cutoffdate', array('id' => $this->cm->instance));
+
+        if ($cutoffdate && $duedate) {
+            return ($allowsubmissionsfromdate <= $time && $time <= $cutoffdate);
         } else {
-            return ($this->assigninstance->timeavailable <= $time);
+            return ($allowsubmissionsfromdate <= $time);
         }
     }
 
