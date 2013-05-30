@@ -82,14 +82,14 @@ class mailbox {
             }
         } else {
             if (!$this->isopen()){
-                error('The submissions are closed');
+                print_error('The submissions are closed');
             } else if (!$existingsubmission) {
                 $this->update_user_submission($USER->id);
                 $this->view_mailbox();
             } else if ($existingsubmission->status<>'submitted') {
                 $this->view_mailbox();
             } else {
-                error('You cannot view the mailbox since you have already sent this assignment for grading');
+                print_error('You cannot view the mailbox since you have already sent this assignment for grading');
             }
             echo html_writer::tag('div', html_writer::link('../../view.php?id=' . $this->cm->id,
                 get_string('backtostart', 'assignsubmission_mailsimulator')), array('align'=>'center'));
@@ -1629,7 +1629,7 @@ class mailbox {
         global $CFG, $DB, $OUTPUT, $USER, $COURSE;
 
         if (!$user = $DB->get_record("user", array("id" => $userid))) {
-            error("User is misconfigured");
+            print_error("User is misconfigured");
         }
 
         $submission = $this->user_have_registered_submission($userid, $this->cm->instance);

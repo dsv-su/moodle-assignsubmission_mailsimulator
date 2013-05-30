@@ -49,7 +49,7 @@ $PAGE->set_cm($cm);
 if ($mid) {
     // Check if mail exists. A template must have a mail to refer to.
     if (!$mailobj = $DB->get_record('assignsubmission_mail_mail', array('id' => $mid))) {
-        echo $OUTPUT->error_text("Mail ID is incorrect");
+         print_error("Mail ID is incorrect");
     }
 
     $mail = $mailboxinstance->get_nested_reply_object($mailobj);

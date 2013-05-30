@@ -217,7 +217,7 @@ class assign_submission_mailsimulator extends assign_submission_plugin {
         if ($submission) {
             $mailboxinstance->view_grading_feedback($userid);
         } else {
-            error(get_string('submissionstatus_', 'assign'));
+            print_error(get_string('submissionstatus_', 'assign'));
         }
         $o = ob_get_contents();
         ob_end_clean();
