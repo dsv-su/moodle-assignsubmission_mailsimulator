@@ -73,7 +73,6 @@ class assign_submission_mailsimulator extends assign_submission_plugin {
         $mform->disabledIf('assignsubmission_blog_enabled', 'assignsubmission_mailsimulator_enabled', 'eq', 1);
         $mform->disabledIf('assignsubmission_onlinetext_enabled', 'assignsubmission_mailsimulator_enabled', 'eq', 1);
         $mform->setDefault('submissiondrafts', 1);
-        $mform->disabledIf('submissiondrafts', 'assignsubmission_mailsimulator_enabled', 'eq', 1);
         $mform->setDefault('teamsubmission', 0);
         $mform->disabledIf('teamsubmission', 'assignsubmission_mailsimulator_enabled', 'eq', 1);
 
