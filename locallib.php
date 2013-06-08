@@ -154,12 +154,6 @@ class assign_submission_mailsimulator extends assign_submission_plugin {
         // Moodle 2.4.
         $mform->disabledIf('assignsubmission_mailsimulator_teacherid', 'assignsubmission_mailsimulator_enabled', 'eq', 0);
 
-        if ($cmid>0) {
-            $mailadminlink = html_writer::link(new moodle_url('/mod/assign/submission/mailsimulator/mailbox.php',
-                array('id'=>$cmid)),
-            get_string('mailadmin', 'assignsubmission_mailsimulator'), array('target' => '_blank'));
-            $mform->addElement('static', 'assignsubmission_mailsimulator_mailadmin', '', $mailadminlink);
-        }
     }
 
     /**
