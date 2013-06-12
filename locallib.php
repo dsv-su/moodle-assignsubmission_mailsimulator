@@ -233,7 +233,10 @@ class assign_submission_mailsimulator extends assign_submission_plugin {
         $cmid = required_param('id', PARAM_INT);
         $cm = get_coursemodule_from_id('assign', $cmid, 0, false, MUST_EXIST);
         $userid = $submission->userid+0;
-        $mailssent = $DB->count_records('assignsubmission_mail_mail', array('userid' => $userid));
+        $mailssent = $DB->count_records('assignsubmission_mail_mail', array(
+            'userid' => $userid,
+            'assignment' => $submission->assignment
+            ));
 
         $sql = 'SELECT sm.id, sm.mailid, t.weight, sm.gainedweight, sm.feedback, m.sender, m.subject, m.message,
         t.correctiontemplate, m.timesent, m.priority, m.attachment, m.userid
