@@ -1525,10 +1525,13 @@ class mailbox {
     // 
     function insert_mail($mail, $gid=0) {
         global $CFG, $DB;
-
-        // Update submission information only when a student sends a mail.
-        $this->update_user_submission($mail->userid);
+        
         $mailid = $DB->insert_record('assignsubmission_mail_mail', $mail);
+
+        if ($mail->userid > 0) {
+            // Update submission information only when a student sends a mail.
+            $this->update_user_submission($mail->userid);
+        }
 
         if ($mailid) {
             foreach ($mail->to as $to) {
@@ -1537,6 +1540,10 @@ class mailbox {
                 $obj->mailid = $mailid;
 
                 $DB->insert_record('assignsubmission_mail_to', $obj);
+            }
+
+            if ($mail->parent == 0) {
+                $this->add_template($mailid, $gid);
             }
 
             return $mailid;
@@ -1767,14 +1774,17 @@ class mailbox {
             }
         }
 
-        echo '  <tr>';
-        echo '      <td class="c0">' . get_string('weight_maxweight', 'assignsubmission_mailsimulator') . ':';
-        if ($download) {
-            echo $OUTPUT->help_icon('weight', 'assignsubmission_mailsimulator') .' ';
+        if ($teacher) {
+            echo '  <tr>';
+            echo '      <td class="c0">' . get_string('weight_maxweight', 'assignsubmission_mailsimulator') . ':';
+            if ($download) {
+                echo $OUTPUT->help_icon('weight', 'assignsubmission_mailsimulator') .' ';
+            }
+            echo '      </td>';
+            echo '      <td class="c1">' . $totalgained . '/' . $maxweight * 2 . '</td>';
+            echo '  </tr>';
         }
-        echo '      </td>';
-        echo '      <td class="c1">' . $totalgained . '/' . $maxweight * 2 . '</td>';
-        echo '  </tr>';
+
         echo '</table>';
 
         if ($teacher && !$download) {
