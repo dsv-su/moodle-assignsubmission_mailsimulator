@@ -196,8 +196,10 @@ if ($mailform->is_cancelled()) {
     }
 
 } else {
-    // Set default data (if any).
-    $mailform->set_data(array('attachment'=>$draftitemid));
+    // Set default attachment data (for existing mails, if any).
+    if ($mid) {
+        $mailform->set_data(array('attachment'=>$draftitemid));
+    }
 
     if ($teacher) {
         $mailboxinstance->print_tabs('addmail');
