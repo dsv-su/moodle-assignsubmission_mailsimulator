@@ -86,7 +86,15 @@ function assignsubmission_mailsimulator_pluginfile($course,
 * @return void
 */
 function assignsubmission_mailsimulator_extend_settings_navigation(settings_navigation $settings, navigation_node $navref) {
+    global $PAGE;
     $id = optional_param('id', 0, PARAM_INT);
-    $link = new moodle_url('/mod/assign/submission/mailsimulator/mailbox.php', array('id' => $id));
-    $node = $navref->add(get_string('mailadmin', 'assignsubmission_mailsimulator'), $link, navigation_node::TYPE_SETTING);
+    $cm = $PAGE->cm;
+    if (!$cm) {
+        return;
+    }
+    $context = $cm->context;
+    if (has_capability('mod/assign:grade', $context)) {
+      $link = new moodle_url('/mod/assign/submission/mailsimulator/mailbox.php', array('id' => $id));
+      $node = $navref->add(get_string('mailadmin', 'assignsubmission_mailsimulator'), $link, navigation_node::TYPE_SETTING);
+    }
 } 

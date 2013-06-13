@@ -1279,6 +1279,7 @@ class mailbox {
                                             <img name="fwd" src="' . $imgurl . 'button-forward.png">
                                         </a>
                                     </td>
+                                    <!--
                                     <td width="10">&nbsp;</td>
                                     <td >
                                         <a href="' . $link . '0&tid=0" title="' .
@@ -1289,6 +1290,7 @@ class mailbox {
                                             <img name="newmail" src="' . $imgurl . 'button-newmail.png">
                                         </a>
                                     </td>
+                                    -->
 
                                 </tr>
                             </table>
@@ -1540,10 +1542,6 @@ class mailbox {
                 $obj->mailid = $mailid;
 
                 $DB->insert_record('assignsubmission_mail_to', $obj);
-            }
-
-            if ($mail->parent == 0) {
-                $this->add_template($mailid, $gid);
             }
 
             return $mailid;

@@ -257,8 +257,10 @@ class assign_submission_mailsimulator extends assign_submission_plugin {
 
         $result = html_writer::start_tag('div');
         $result .= get_string('mailssent', 'assignsubmission_mailsimulator') . $mailssent;
-        $result .= html_writer::empty_tag('br');
-        $result .= get_string('weightgiven', 'assignsubmission_mailsimulator') . $weightgiven;
+        if (!$submission) {
+            $result .= html_writer::empty_tag('br');
+            $result .= get_string('weightgiven', 'assignsubmission_mailsimulator') . $weightgiven;
+        }
         $result .= html_writer::end_tag('div');
 
         return $result;

@@ -176,16 +176,20 @@ if ($mailform->is_cancelled()) {
             // If attachment is enabled, but filemanager has been disabled, then we save existing value from DB.
             if (isset($fromform->attachment)) {
                 $info = file_get_draft_area_info($fromform->attachment);
-                $present = ($info['filecount']>0) ? '1' : '';
+                $present = ($info['filecount']>0) ? '1' : '0';
                 file_save_draft_area_files($fromform->attachment, $context->id, 'assignsubmission_mailsimulator', 'attachment',
-                       $currentmailid, $fileoptions);
+                    $currentmailid, $fileoptions);
                 $DB->set_field('assignsubmission_mail_mail', 'attachment', $present, array('id'=>$currentmailid));
             } else {
                 $DB->set_field('assignsubmission_mail_mail', 'attachment', $existingattachment, array('id'=>$currentmailid));
             }
         }
-
         // Here add_template used to be called.
+
+        if ($fromform->parent == 0 && $fromform->userid == 0) {
+                $mailboxinstance->add_template($currentmailid, $gid);
+        }
+
         if (!$teacher) {
             $obj = $mailboxinstance->get_mail_status($fromform->parent);
             $mailboxinstance->set_mail_status($obj->mailid, 2);
@@ -197,8 +201,10 @@ if ($mailform->is_cancelled()) {
 
 } else {
     // Set default attachment data (for existing mails, if any).
-    if ($mid) {
+    if ($mid>0) {
         $mailform->set_data(array('attachment'=>$draftitemid));
+    } else {
+        $mailform->set_data(array('attachment'=>0));
     }
 
     if ($teacher) {
