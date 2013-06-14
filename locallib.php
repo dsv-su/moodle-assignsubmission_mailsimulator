@@ -66,6 +66,7 @@ class assign_submission_mailsimulator extends assign_submission_plugin {
         }
         $teacherdefault = $this->get_config('teacherid');
 
+        /*
         $mform->setDefault('assignsubmission_file_enabled', 0);
         $mform->setDefault('assignsubmission_blog_enabled', 0);
         $mform->setDefault('assignsubmission_online_enabled', 0);
@@ -75,6 +76,7 @@ class assign_submission_mailsimulator extends assign_submission_plugin {
         $mform->setDefault('submissiondrafts', 1);
         $mform->setDefault('teamsubmission', 0);
         $mform->disabledIf('teamsubmission', 'assignsubmission_mailsimulator_enabled', 'eq', 1);
+        */
 
         // Select whether attachments enabled.
         $mform->addElement('select', 'assignsubmission_mailsimulator_filesubmissions',
