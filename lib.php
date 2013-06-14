@@ -86,14 +86,21 @@ function assignsubmission_mailsimulator_pluginfile($course,
 * @return void
 */
 function assignsubmission_mailsimulator_extend_settings_navigation(settings_navigation $settings, navigation_node $navref) {
-    global $PAGE;
+    global $PAGE, $DB;
     $id = optional_param('id', 0, PARAM_INT);
     $cm = $PAGE->cm;
+    $course  = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
+    $context = context_module::instance($cm->id);
+    $assigninstance = new assign($context, $cm, $course);
     if (!$cm) {
         return;
     }
-    $context = $cm->context;
-    if (has_capability('mod/assign:grade', $context)) {
+    //var_dump($assigninstance);
+    $pluginenabled = $DB->get_field('assign_plugin_config', 'value', array(
+      'plugin'=>'mailsimulator',
+      'name'=>'enabled',
+      'assignment'=>$cm->instance));
+    if (has_capability('mod/assign:grade', $context) && $pluginenabled) {
       $link = new moodle_url('/mod/assign/submission/mailsimulator/mailbox.php', array('id' => $id));
       $node = $navref->add(get_string('mailadmin', 'assignsubmission_mailsimulator'), $link, navigation_node::TYPE_SETTING);
     }
