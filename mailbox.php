@@ -23,10 +23,10 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+global $CFG, $DB, $COURSE, $PAGE;
+
 require_once(dirname(__FILE__).'/../../../../config.php');
 require_once($CFG->dirroot.'/mod/assign/submission/mailsimulator/mailbox_class.php');
-
-global $CFG, $DB, $COURSE, $PAGE;
 
 $id      = required_param('id', PARAM_INT);
 $cm      = get_coursemodule_from_id('assign', $id, 0, false, MUST_EXIST);
