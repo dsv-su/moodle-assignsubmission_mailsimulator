@@ -276,7 +276,8 @@ class mailbox {
                 $mailobj = $replyobject;
             } else {
                 $attachments = $mailobj->attachment>0 ? $this->get_files_str($mailobj->id, 0) : '';
-                $message = format_text(unserialize($mailobj->message)["text"], FORMAT_MOODLE);
+                $text = unserialize($mailobj->message);
+                $message = format_text($text["text"], FORMAT_MOODLE);
                 $mailobj->message = '<div class="mailmessage">' . $attachments . $message;
 
                 if ($editingteacher) {
@@ -876,7 +877,8 @@ class mailbox {
      */
     function get_nested_from_child($mailobj) {
         global $CFG, $DB;
-        $message = '<div class="mailmessage">' . format_text(unserialize($mailobj->message)['text'], FORMAT_MOODLE);
+        $text = unserialize($mailobj->message);
+        $message = '<div class="mailmessage">' . format_text($text['text'], FORMAT_MOODLE);
         $dept = 1;
 
         while ($mailobj = $DB->get_record('assignsubmission_mail_mail', array('id' => $mailobj->parent))) {
@@ -885,7 +887,8 @@ class mailbox {
             $message .= '<br /><br/>' . $date . ' ' . get_string('wrote', 'assignsubmission_mailsimulator', $from) . ':';
             $message .= '<div style="border-left: 2px outset #000000; padding: 5px; padding-bottom: 0px; padding-right: 0px;">';
             $message .= $mailobj->attachment>0 ? $this->get_files_str($mailobj->id, 0) : '';
-            $message .= format_text(unserialize($mailobj->message)['text'], FORMAT_MOODLE);
+            $text = unserialize($mailobj->message);
+            $message .= format_text($text['text'], FORMAT_MOODLE);
             $dept++;
         }
 
@@ -937,7 +940,8 @@ class mailbox {
             }
 
             $replystr .= $m->attachment>0 ? $this->get_files_str($m->id, 0) : '';
-            $replystr .= format_text(unserialize($m->message)['text'], FORMAT_MOODLE);
+            $text = unserialize($m->message);
+            $replystr .= format_text($text['text'], FORMAT_MOODLE);
 
             if ($editbuttons) {
                 /*
@@ -1128,7 +1132,8 @@ class mailbox {
                 if ($nested) {
                     $replyobject[] = $nested;
                 } else {
-                    $message = format_text(unserialize($mailobj->message)['text'], FORMAT_MOODLE);
+                    $text = unserialize($mailobj->message);
+                    $message = format_text($text['text'], FORMAT_MOODLE);
                     $attachments = $mailobj->attachment>0 ? $this->get_files_str($mailobj->id, 0) : '';
                     $mailobj->message = '<div class="mailmessage">' . $attachments . $message . '</div>';
                     $replyobject[] = $mailobj;
@@ -1697,7 +1702,8 @@ class mailbox {
         if ($signedoutarr) {
             foreach ($signedoutarr as $mailobj) {
                 $mailobj->id = $mailobj->mailid;
-                $message = '<div class="mailmessage">' . format_text(unserialize($mailobj->message)['text']) .
+                $text = unserialize($mailobj->message);
+                $message = '<div class="mailmessage">' . format_text($text['text']) .
                     ($mailobj->attachment>0 ? $this->get_files_str($mailobj->id, $mailobj->userid) : '') . '</div>';
                 unset($mailobj->mailid);
                 $nestedobj = $this->get_nested_reply_object($mailobj);
@@ -1835,7 +1841,8 @@ class mailbox {
                 if ($mobj->studentreplys) {
                     echo '<div style="padding: 5px; background:white; border-left:1px solid; border-right:1px solid">';
                     foreach ($mobj->studentreplys as $reply) {
-                        echo format_text('<b>' . $reply->subject . '</b><br />' . unserialize($reply->message)['text']) .
+                        $text = unserialize($reply->message);
+                        echo format_text('<b>' . $reply->subject . '</b><br />' . $text['text']) .
                             ($reply->attachment>0 ? $this->get_files_str($reply->id, $reply->userid) : '');
                     }
                     echo '</div>';
@@ -1866,7 +1873,8 @@ class mailbox {
                     format_text($mobj->subject) . '</div>';
                 echo '<div style="padding: 5px; background:white; border-left:1px solid; border-right:1px solid;
                     border-bottom:1px solid">';
-                echo format_text(unserialize($mobj->message)['text']) .
+                $text = unserialize($mobj->message);
+                echo format_text($text['text']) .
                     ($mobj->attachment>0 ? $this->get_files_str($mobj->id, $mobj->userid) : '');
                 echo '</div><br />';
             }
