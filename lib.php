@@ -87,6 +87,7 @@ function assignsubmission_mailsimulator_pluginfile($course,
 */
 function assignsubmission_mailsimulator_extend_settings_navigation(settings_navigation $settings, navigation_node $navref) {
     global $PAGE, $DB;
+    require_once($CFG->dirroot.'/mod/assign/locallib.php');
     $id = optional_param('id', 0, PARAM_INT);
     $cm = $PAGE->cm;
     $course  = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
