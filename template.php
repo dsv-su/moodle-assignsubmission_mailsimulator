@@ -55,7 +55,8 @@ if ($mid) {
     $mail = $mailboxinstance->get_nested_reply_object($mailobj);
     if (!$mail) {
         $mail = $mailobj;
-        $mail->message = unserialize($mail->message)["text"];
+        $text = unserialize($mail->message);
+        $mail->message = $text["text"];
     }
 
     $mailstr = html_writer::tag('div', format_text(($mail->message), FORMAT_MOODLE) , array('style' => 'background-color:#ffffff;
