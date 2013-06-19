@@ -96,7 +96,7 @@ function assignsubmission_mailsimulator_extend_settings_navigation(settings_navi
     if (!$cm) {
         return;
     }
-    //var_dump($assigninstance);
+    
     $pluginenabled = $DB->get_field('assign_plugin_config', 'value', array(
       'plugin'=>'mailsimulator',
       'name'=>'enabled',

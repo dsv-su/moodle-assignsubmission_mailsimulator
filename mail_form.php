@@ -151,7 +151,8 @@ class mail_form extends moodleform {
             $mform->addElement('hidden', 'timesent', time());
             $mform->setType('timesent', PARAM_INT);
         } else {
-            $from = $DB->get_field('assignsubmission_mail_to', 'contactid', array('mailid' => $this->_customdata->parent));
+            //$from = $DB->get_field('assignsubmission_mail_to', 'contactid', array('mailid' => $this->_customdata->parent));
+            $from = $this->_customdata->sender;
             unset($to[9999999]);
 
             if ($from) {

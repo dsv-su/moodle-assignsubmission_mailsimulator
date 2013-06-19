@@ -184,10 +184,11 @@ if ($mailform->is_cancelled()) {
                 $DB->set_field('assignsubmission_mail_mail', 'attachment', $existingattachment, array('id'=>$currentmailid));
             }
         }
-        // Here add_template used to be called.
 
-        if ($fromform->parent == 0 && $fromform->userid == 0) {
-                $mailboxinstance->add_template($currentmailid, $gid);
+        if (!$DB->record_exists('assignsubmission_mail_mail', array('id' => $currentmailid))) {
+            if ($fromform->parent == 0 && $fromform->userid == 0) {
+                    $mailboxinstance->add_template($currentmailid, $gid);
+            }
         }
 
         if (!$teacher) {
