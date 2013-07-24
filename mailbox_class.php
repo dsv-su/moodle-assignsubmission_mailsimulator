@@ -84,14 +84,14 @@ class mailbox {
             }
         } else {
             if (!$this->isopen()){
-                print_error('The submissions are closed');
+                print_error(get_string('submissionsclosed', 'assign'));
             } else if (!$existingsubmission) {
                 $this->update_user_submission($USER->id);
                 $this->view_mailbox();
             } else if ($existingsubmission->status<>'submitted') {
                 $this->view_mailbox();
             } else {
-                print_error('You cannot view the mailbox since you have already sent this assignment for grading');
+                print_error(get_string('submissionstatus_submitted', 'assign'));
             }
             echo html_writer::tag('div', html_writer::link('../../view.php?id=' . $this->cm->id,
                 get_string('backtostart', 'assignsubmission_mailsimulator')), array('align'=>'center'));
@@ -141,7 +141,7 @@ class mailbox {
         if ($mailgroupnumber > $mailgroupcount) {
             // Prevent display if the assignment is not configured.
             if (!has_capability('mod/assign:grade', $this->context)) {
-                print_error('Assignment needs to be setup correctly, contact your teacher');
+                print_error(get_string('error_setup', 'assignsubmission_mailsimulator'));
             }
             // Add new mail.
             if (!$DB->record_exists('assignsubmission_mail_cntct', array('assignment' => $this->cm->instance))) {

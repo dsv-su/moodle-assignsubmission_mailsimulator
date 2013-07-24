@@ -40,7 +40,7 @@ require_once($CFG->dirroot.'/mod/assign/submission/mailsimulator/mailbox_class.p
 $mailboxinstance = new mailbox($context, $cm, $course);
 
 $PAGE->set_url('/mod/assign/submission/mailsimulator/template.php', array('id' => $id));
-$PAGE->set_title('Edit template');
+$PAGE->set_title(get_string('edittemplate', 'assignsubmission_mailsimulator'));
 $PAGE->set_pagelayout('standard');
 $PAGE->set_context($context);
 $PAGE->set_course($course);
@@ -49,7 +49,7 @@ $PAGE->set_cm($cm);
 if ($mid) {
     // Check if mail exists. A template must have a mail to refer to.
     if (!$mailobj = $DB->get_record('assignsubmission_mail_mail', array('id' => $mid))) {
-         print_error("Mail ID is incorrect");
+        print_error(get_string('error_mid', 'assignsubmission_mailsimulator'));
     }
 
     $mail = $mailboxinstance->get_nested_reply_object($mailobj);

@@ -35,7 +35,7 @@ require_login($course);
 require_capability('mod/assign:grade', $context);
 
 $PAGE->set_url('/mod/assign/submission/mailsimulator/contacts.php', array('id' => $id));
-$PAGE->set_title('Contacts');
+$PAGE->set_title(get_string('editcontacts', 'assignsubmission_mailsimulator'));
 $PAGE->set_pagelayout('standard');
 $PAGE->set_context($context);
 $PAGE->set_course($course);

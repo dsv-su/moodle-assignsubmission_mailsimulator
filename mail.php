@@ -40,7 +40,7 @@ $context = context_module::instance($cm->id);
 require_login($course);
 
 $PAGE->set_url('/mod/assign/submission/mailsimulator/mail.php', array('id' => $id));
-$PAGE->set_title('Edit mail');
+$PAGE->set_title(get_string('editmail', 'assignsubmission_mailsimulator'));
 $PAGE->set_pagelayout('standard');
 $PAGE->set_context($context);
 $PAGE->set_course($course);
@@ -53,7 +53,7 @@ $assigninstance = new assign($context, $cm, $course);
 $teacher = has_capability('mod/assign:grade', $context);
 
 if (!$teacher && !$mailboxinstance->isopen()) {
-    print_error('The assignment is closed');
+    print_error(get_string('submissionsclosed', 'assign'));
 }
 
 if ($mid) {
@@ -61,12 +61,10 @@ if ($mid) {
 
     $customdata = $DB->get_record('assignsubmission_mail_mail', array('id' => $mid));
     if (!$customdata) {
-        print_error("Mail ID was incorrect", $CFG->wwwroot . '/mod/assign/submission/mailsimulator/mailbox.php?id='
-            . $cm->id);
+        print_error(get_string('error_mid', 'assignsubmission_mailsimulator'));
     }
     if (!$customdata->userid == 0) { // Only edit teacher mail.
-        print_error("You are not allowed to edit this mail.", $CFG->wwwroot . '/mod/assign/submission/mailsimulator/mailbox.php?id='
-            . $cm->id);
+        print_error(get_string('error_edit', 'assignsubmission_mailsimulator'));
     }
 
     // Fill the form with mail's data, if we edit a mail.
@@ -111,7 +109,7 @@ $mailstr = '';
 
 if ($tid) { // If a student replies to or forward a mail.
     if (!$mailobj = $DB->get_record('assignsubmission_mail_mail', array('id' => $tid))) {
-        print_error("Mail ID is incorrect");
+        print_error(get_string('error_mid', 'assignsubmission_mailsimulator'));
     }
     $message = $mailboxinstance->get_nested_from_child($mailobj);
     $mailstr = html_writer::tag('div', $message , array('style' => 'background-color:#ffffff; margin:10px; padding:5px; border:1px;
