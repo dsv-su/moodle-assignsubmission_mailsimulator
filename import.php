@@ -50,9 +50,9 @@ $mailbox = new mailbox($context, $cm, $course);
 echo $OUTPUT->header();
 
 // Update contacts table and save old contactids.
-$sql = 'SELECT DISTINCT userid FROM {assignment_mailsimulation_mail} WHERE assignment = '. $assignmentid .' AND userid<>0';
+$sql = 'SELECT DISTINCT userid FROM {old_assignment_mailsimulation_mail} WHERE assignment = '. $assignmentid .' AND userid<>0';
 $assignuserids = $DB->get_records_sql($sql);
-$contacts = $DB->get_records('assignment_mailsimulation_contact', array('assignment' => $assignmentid));
+$contacts = $DB->get_records('old_assignment_mailsimulation_contact', array('assignment' => $assignmentid));
 $contactids = array();
 foreach ($contacts as $contact) {
     $contact->assignment = $cm->instance;
@@ -65,8 +65,8 @@ echo $OUTPUT->notification('contacts complete');
 ob_flush();flush();
 
 // Update user table and save old userids.
-$select = 'id IN (SELECT DISTINCT userid FROM {assignment_mailsimulation_mail} WHERE assignment = '. $assignmentid .' AND userid<>0)';
-$users = $DB->get_records_select('user_old', $select);
+$select = 'id IN (SELECT DISTINCT userid FROM {old_assignment_mailsimulation_mail} WHERE assignment = '. $assignmentid .' AND userid<>0)';
+$users = $DB->get_records_select('old_user', $select);
 $userids = array();
 foreach ($users as $user) {
     unset($user->descriptionformat);
@@ -96,7 +96,7 @@ ob_flush();flush();
 
 
 // Update mail table and save old ids.
-$mails = $DB->get_records('assignment_mailsimulation_mail', array('assignment' => $assignmentid));
+$mails = $DB->get_records('old_assignment_mailsimulation_mail', array('assignment' => $assignmentid));
 $ids = array();
 foreach ($mails as $mail) {
     if (isset($userids[$mail->userid]) || $mail->userid == 0) {
@@ -136,7 +136,7 @@ ob_flush();flush();
 
 // Update templates and save old ids.
 $where = 'randgroup > 0 AND weight > 0';
-$templates = $DB->get_records_select('assignment_mailsimulation_parent_mail', $where);
+$templates = $DB->get_records_select('old_assignment_mailsimulation_parent_mail', $where);
 $templateids = array();
 foreach ($templates as $template) {
     if (isset($ids[$template->mailid])) {
@@ -153,7 +153,7 @@ ob_flush();flush();
 
 // Update signed mails and save old ids.
 $where = 'status > 0';
-$signedmails = $DB->get_records_select('assignment_mailsimulation_signed_out_mail', $where);
+$signedmails = $DB->get_records_select('old_assignment_mailsimulation_signed_out_mail', $where);
 $signedmailids = array();
 foreach ($signedmails as $signedmail) {
     if (isset($userids[$signedmail->userid]) && isset($ids[$signedmail->mailid])) {
@@ -172,7 +172,7 @@ ob_flush();flush();
 
 
 // Update tos and save old ids.
-$tos = $DB->get_records('assignment_mailsimulation_to');
+$tos = $DB->get_records('old_assignment_mailsimulation_to');
 $toids = array();
 foreach ($tos as $to) {
     if (isset($ids[$to->mailid])) {
