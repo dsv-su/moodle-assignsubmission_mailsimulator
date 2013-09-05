@@ -75,12 +75,11 @@ $string['mailbox'] = 'Mailbox';
 $string['mailboxes'] = 'Mailboxes';
 $string['mailsimulator'] = 'Mail Simulator submission';
 $string['mailsimulatorfilename'] = 'mailsubmission.html';
-$string['mailtostudent'] = 'STUDENT E-MAIL ADRESS';
+$string['mailtostudent'] = 'STUDENT E-MAIL ADDRESS';
 $string['maxattachments'] = 'Maximum size of attachments';
 $string['maxattachments_help'] = 'Sets the maximum size of attachments. By default the course filesize is used.';
 $string['maxweight'] = 'Maxweight per mail';
-$string['maxweight_help'] = '<p>Sets the maximum weight for a mail within an assignment.</p>
-    <p>The weights are used as ratings assistance when grading the assignment.</p>';
+$string['maxweight_help'] = 'Sets the maximum weight for a mail within an assignment. The weights are used as ratings assistance when grading the assignment.';
 $string['medium'] = 'medium';
 $string['message'] = 'Message';
 $string['newmail'] = 'New Mail';
