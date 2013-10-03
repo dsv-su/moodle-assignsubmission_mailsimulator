@@ -166,6 +166,7 @@ if ($mailform->is_cancelled()) {
             $mailboxinstance->update_mail($fromform);
             $currentmailid = $fromform->id; // We went back to original naming: id stands for mailid.
         } else {
+            $newmail = true;
             $currentmailid = $mailboxinstance->insert_mail($fromform, $gid);
         }
 
@@ -183,7 +184,7 @@ if ($mailform->is_cancelled()) {
             }
         }
 
-        if (!$DB->record_exists('assignsubmission_mail_mail', array('id' => $currentmailid))) {
+        if ($teacher && $newmail) { 
             if ($fromform->parent == 0 && $fromform->userid == 0) {
                     $mailboxinstance->add_template($currentmailid, $gid);
             }
