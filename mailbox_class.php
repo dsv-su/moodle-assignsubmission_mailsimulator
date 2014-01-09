@@ -1316,6 +1316,7 @@ class mailbox {
                                     <td >
                                         <img name="fwd" src="' . $imgurl . 'button-forward-dissabled.png">
                                     </td>
+                                    <!--
                                     <td width="10">&nbsp;</td>
                                     <td >
                                         <a href="' . $link . '0&tid=0" title="' .
@@ -1326,7 +1327,7 @@ class mailbox {
                                             <img name="newmail" src="' . $imgurl . 'button-newmail.png">
                                         </a>
                                     </td>
-
+                                    -->
                                 </tr>
                             </table>
                             <!-- End Mail Top Menu-->';
