@@ -2,6 +2,11 @@ div.singlebutton {
     margin: 0;
 }
 
+.controlbuttons>table {
+	display: inline-table;
+}
+
+
 .mailboxwrapper table, tbody, tfoot, thead, tr, th, td {
 	margin: 0;
 	padding: 0;
@@ -40,7 +45,7 @@ div.singlebutton {
 }
 
 .mailboxes {
-	width: 100px;
+	width: 15%;
 	background-image: url([[pix:assignsubmission_mailsimulator|mailboxes-bg]]);
 }
 
@@ -64,7 +69,7 @@ div.singlebutton {
 }
 
 .mailheaders {
-	width: 300px;
+	width: 35%;
 	min-height: 400px;
 	border-left-style: solid;
 	border-left-color: #999999;
@@ -145,6 +150,7 @@ mailheadertd {
 .shadow-bottom-bg {
 	background-repeat: repeat-x;
 	background-image: url([[pix:assignsubmission_mailsimulator|shadow-bg-bottom]]);
+	height: 47px;
 }
 .shadow-left-bg {
 	background-repeat: repeat-y;
@@ -157,6 +163,7 @@ mailheadertd {
 .window-top-bg {
 	background-repeat: repeat-x;
 	background-image: url([[pix:assignsubmission_mailsimulator|window-top-bg]]);
+	height: 59px;
 }
 
 

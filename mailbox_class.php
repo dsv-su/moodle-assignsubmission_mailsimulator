@@ -244,7 +244,7 @@ class mailbox {
                 }
                 echo '<div style="border:1px; border-style:solid; width:90%; margin:auto; background-color:#ffffff">';
 
-                echo '<table border="0" width="100%" style="background:gray; color:white; margin-bottom: 0;">';
+                echo '<table border="0" width="100%" style="background:gray; color:white; margin-bottom: 0; display: block;">';
                 echo '  <tr>';
                 echo '      <td style="padding:5px"> '.get_string('mail', 'assignsubmission_mailsimulator').' ' .
                     $mailobj->randgroup . ' </td>';
@@ -317,7 +317,12 @@ class mailbox {
             echo '      <td colspan="5">' . date('Y-m-d H:i', $mailobj->timesent) . '</td>';
             echo '  </tr>';
             echo '  <tr>';
-            echo '      <td>';
+            echo '      <td colspan="6">';
+
+
+            echo '<div class="controlbuttons">';
+
+
             echo '          <table>';
             echo '              <tr>';
             echo '                  <td style="padding:0; margin:0;">';
@@ -334,8 +339,8 @@ class mailbox {
             echo '                  </td>';
             echo '              </tr>';
             echo '          </table>';
-            echo '      </td>';
-            echo '      <td style="width:100px">';
+            //echo '      </td>';
+            //echo '      <td style="width:100px">';
             echo '          <table>';
             echo '              <tr>';
             echo '                  <td style="padding:0; margin:0;">';
@@ -352,8 +357,8 @@ class mailbox {
             echo '                  </td>';
             echo '              </tr>';
             echo '          </table>';
-            echo '      </td>';
-            echo '      <td style="width:100px">';
+            //echo '      </td>';
+            //echo '      <td style="width:100px">';
             echo '          <table>';
             echo '              <tr>';
             echo '                  <td style="padding:0; margin:0;">';
@@ -368,9 +373,9 @@ class mailbox {
             echo '                  </td>';
             echo '              </tr>';
             echo '          </table>';
-            echo '      </td>';
+            //echo '      </td>';
             if ($editingteacher && $trash) {
-                echo '      <td style="width:100px">';
+                //echo '      <td style="width:100px">';
                 echo '          <table>';
                 echo '              <tr>';
                 echo '                  <td style="padding:0; margin:0;">';
@@ -383,9 +388,9 @@ class mailbox {
                 echo '                  </td>';
                 echo '              </tr>';
                 echo '          </table>';
-                echo '      </td>';
+                //echo '      </td>';
             }
-            echo '      <td style="width:100px">';
+            //echo '      <td style="width:100px">';
             echo '          <table>';
             echo '              <tr>';
             echo '                  <td style="padding:0; margin:0;">';
@@ -408,8 +413,8 @@ class mailbox {
             echo '                  </td>';
             echo '              </tr>';
             echo '          </table>';
-            echo '      </td>';
-            echo '      <td rowspan="3">';
+            //echo '      </td>';
+            //echo '      <td rowspan="3">';
             echo '          <table align="right">';
             echo '              <tr>';
             echo '                  <td style="padding:0; margin:0;">';
@@ -420,6 +425,7 @@ class mailbox {
             echo '                  </td>';
             echo '              </tr>';
             echo '          </table>';
+            echo '</div>';
             echo '      </td>';
             echo '  </tr>';
             echo '</table>';
@@ -1207,9 +1213,9 @@ class mailbox {
             <td>
                             <table border="0"  width="100%">
                                 <tr>
-                                    <td width="32px"><img src="' . $imgurl . 'shadow-bottom-center-left.png"></td>
+                                    <td width="50px" height="47px"><img src="' . $imgurl . 'shadow-bottom-center-left.png"></td>
                                     <td class="shadow-bottom-bg">&nbsp;</td>
-                                    <td width="32px"><img src="' . $imgurl . 'shadow-bottom-center-right.png"></td>
+                                    <td width="50px" height="47px"><img src="' . $imgurl . 'shadow-bottom-center-right.png"></td>
                 </tr>
                             </table>
             </td>
