@@ -264,11 +264,11 @@ if ($mailform->is_cancelled()) {
                     html_writer::tag('tr',
                         html_writer::tag('td', 
                             html_writer::tag('img', '', array('src' => $imgurl . 'shadow-bottom-center-left.png'))
-                            , array('width' => '32px')) .
+                            , array('width' => '50px')) .
                         html_writer::tag('td', '&nbsp;', array('class' => 'shadow-bottom-bg')) .
                         html_writer::tag('td', 
                             html_writer::tag('img', '', array('src' => $imgurl . 'shadow-bottom-center-right.png'))
-                            , array('width' => '32px'))
+                            , array('width' => '50px'))
                         ), array('width' => '100%', 'border' => '0'))) .
             html_writer::tag('td', 
                 html_writer::tag('img', '', array('src' => $imgurl . 'shadow-bottom-right.png')), array('width' => '32px')))

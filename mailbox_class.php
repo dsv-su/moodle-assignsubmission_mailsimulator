@@ -1213,7 +1213,7 @@ class mailbox {
             <td>
                             <table border="0"  width="100%">
                                 <tr>
-                                    <td width="50px" height="47px"><img src="' . $imgurl . 'shadow-bottom-center-left.png"></td>
+                                    <td height="47px" style="width:50px !important; "><img src="' . $imgurl . 'shadow-bottom-center-left.png"></td>
                                     <td class="shadow-bottom-bg">&nbsp;</td>
                                     <td width="50px" height="47px"><img src="' . $imgurl . 'shadow-bottom-center-right.png"></td>
                 </tr>
