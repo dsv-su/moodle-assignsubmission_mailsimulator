@@ -161,6 +161,7 @@ if ($mailform->is_cancelled()) {
             $fromform->attachment = 0; // Prevents error when writing to DB when attachments are disabled.
         }
         
+        $newmail = false;
         if ($DB->record_exists('assignsubmission_mail_mail', array('id' => $fromform->mailid))) {
             $existingattachment = $DB->get_field('assignsubmission_mail_mail', 'attachment', array('id' => $fromform->mailid));
             $mailboxinstance->update_mail($fromform);
