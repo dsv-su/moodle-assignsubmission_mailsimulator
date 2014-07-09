@@ -174,17 +174,17 @@ class mail_form extends moodleform {
             $mform->setDefault('timesent', $this->_customdata->timesent);
         }
 
-        $mform->addElement('text', 'subject', get_string('subject', 'assignsubmission_mailsimulator'), array('size' => '83'));
+        $mform->addElement('text', 'subject', get_string('subject', 'assignsubmission_mailsimulator'));
         $mform->setType('subject', PARAM_TEXT);
         $mform->setDefault('subject', $this->_customdata->subject);
 
         if ($this->_customdata->teacher) {
             $mform->addElement('editor', 'message', get_string('message', 'assignsubmission_mailsimulator'),
-                array('cols' => 83, 'rows' => 20));
+                array('rows' => 20));
             $mform->setType('message', PARAM_RAW); // To be cleaned before display.
         } else {
             $mform->addElement('textarea', 'message', get_string('message', 'assignsubmission_mailsimulator'),
-                array('cols' => 83, 'rows' => 20));
+                array('rows' => 20));
             $mform->setType('message', PARAM_TEXT);
         }
 

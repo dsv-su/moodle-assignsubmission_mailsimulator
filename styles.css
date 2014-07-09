@@ -37,6 +37,18 @@ div.singlebutton {
         background-color: #ffffff;
 }
 
+.mailmidletable textarea, .mailmidletable input {
+	width: 90%;
+}
+
+.mailmidletable .filemanager {
+	width: 92%;
+}
+
+.mailmidletable .feditor>div {
+	width: 92%;
+}
+
 .mailboxheader {
         font-size: 90%;
         padding: 4px;
@@ -194,6 +206,15 @@ div.scroll {
 		padding-left: 10px;
 		margin-bottom: 0px !important;
 		padding-right: 10px;
+	}
+	.mailmidletable textarea, .mailmidletable input {
+	width: 97%;
+	}
+	.mailmidletable .filemanager {
+		width: 99%;
+	}
+	.mailmidletable .feditor>div {
+	width: 99%;
 	}
 }
 
