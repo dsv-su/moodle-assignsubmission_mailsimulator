@@ -1669,7 +1669,9 @@ class mailbox {
                         $obj->$karr[0] = $value;
                         $sarr[$karr[1]] = $obj;
                     }
-
+                    if ($karr[0] == 'feedback') {
+                        $value = htmlspecialchars($value, ENT_QUOTES);
+                    }
                     $sarr[$karr[1]]->$karr[0] = $value;
                 }
 
