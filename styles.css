@@ -189,20 +189,20 @@ div.scroll {
 }
 
 @media (min-width: 1200px) {
-	.mform .fitem div.fitemtitle {
+	.mailmidletable .mform .fitem div.fitemtitle {
 		width: 150px !important;
 	}
-	.mform .fitem .felement {
+	.mailmidletable .mform .fitem .felement {
 		margin-left: 175px !important;	
 		padding-right: 10px;
 	}
-	.mform>fieldset>div {
+	.mailmidletable .mform>fieldset>div {
 		padding-top: 10px;
 	}
 }
 
 @media (max-width: 1199px) {
-	.mform .fitem {
+	.mailmidletable .mform .fitem {
 		padding-left: 10px;
 		margin-bottom: 0px !important;
 		padding-right: 10px;
