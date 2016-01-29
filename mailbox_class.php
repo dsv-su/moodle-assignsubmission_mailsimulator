@@ -724,6 +724,9 @@ class mailbox {
         $submission = $this->assigninstance->get_user_submission($userid, true);
 
         if ($existingsubmission) {
+            if ($this->assigninstance->get_instance()->submissiondrafts) {
+                $submission->status = 'draft';
+            }
             $submission->timemodified = time();
             $DB->update_record('assign_submission', $submission);
         }
