@@ -272,11 +272,11 @@ class assign_submission_mailsimulator extends assign_submission_plugin {
 
         $files = array();
 
-        $id         = required_param('id', PARAM_INT);
+        $cm         = $this->assignment->get_course_module();
+        $id         = $cm->id;
         $sid        = optional_param('sid', $submission->id, PARAM_INT);
         $gid        = optional_param('gid', 0, PARAM_INT);
         $userid     = $submission->userid+0;
-        $cm         = get_coursemodule_from_id('assign', $id, 0, false, MUST_EXIST);
         $course     = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
         $context    = context_module::instance($cm->id);
         
