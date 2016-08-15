@@ -173,8 +173,8 @@ class assign_submission_mailsimulator extends assign_submission_plugin {
      * @return bool
      */
     public function get_form_elements($submission, MoodleQuickForm $mform, stdClass $data) {
-        $cmid = required_param('id', PARAM_INT);
-        $mailboxurl = new moodle_url('/mod/assign/submission/mailsimulator/mailbox.php', array("id"=>$cmid));
+        $cmid = $this->assignment->get_course_module()->id;
+        $mailboxurl = new moodle_url('/mod/assign/submission/mailsimulator/mailbox.php', array("id" => $cmid));
         redirect($mailboxurl);
         return true;
     }
@@ -189,11 +189,11 @@ class assign_submission_mailsimulator extends assign_submission_plugin {
     public function view(stdClass $submission) {
         global $CFG, $DB, $OUTPUT;
 
-        $id         = required_param('id', PARAM_INT);
+        $cm         = $this->assignment->get_course_module();
+        $id         = $cm->id;
         $sid        = optional_param('sid', $submission->id, PARAM_INT);
         $gid        = optional_param('gid', 0, PARAM_INT);
         $userid     = $DB->get_field('assign_submission', 'userid', array("id" => $sid));
-        $cm         = get_coursemodule_from_id('assign', $id, 0, false, MUST_EXIST);
         $course     = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
         $context    = context_module::instance($cm->id);
         require_once($CFG->dirroot.'/mod/assign/submission/mailsimulator/mailbox_class.php');
@@ -223,8 +223,8 @@ class assign_submission_mailsimulator extends assign_submission_plugin {
         global $DB;
 
         $showviewlink = true;
-        $cmid = required_param('id', PARAM_INT);
-        $cm = get_coursemodule_from_id('assign', $cmid, 0, false, MUST_EXIST);
+        $cm = $this->assignment->get_course_module();
+        $cmid = $cm->id;
         $userid = $submission->userid+0;
         $mailssent = $DB->count_records('assignsubmission_mail_mail', array(
             'userid' => $userid,
