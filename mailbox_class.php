@@ -1806,7 +1806,7 @@ class mailbox {
         echo '</table>';
 
         if ($teacher && !$download) {
-            echo '<form name="input" action="' . $CFG->wwwroot . '/mod/assign/view.php?id=' . $this->cm->id . '&sid=' . $sid .
+            echo '<form name="mailsimulator_feedback" action="' . $CFG->wwwroot . '/mod/assign/view.php?id=' . $this->cm->id . '&sid=' . $sid .
                 '&gid=' . $gid . '&plugin=mailsimulator&action=viewpluginassignsubmission&returnaction=grading&returnparams="
                  method="post">';
         }
