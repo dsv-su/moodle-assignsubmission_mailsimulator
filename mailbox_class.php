@@ -1854,8 +1854,9 @@ class mailbox {
                     echo '<div style="padding: 5px; background:white; border-left:1px solid; border-right:1px solid">';
                     foreach ($mobj->studentreplys as $reply) {
                         $text = unserialize($reply->message);
-                        echo format_text('<b>' . $reply->subject . '</b><br />' . $text['text']) .
-                            ($reply->attachment>0 ? $this->get_files_str($reply->id, $reply->userid) : '');
+                        echo format_text('<b>' . $reply->subject . '</b><small> (' .
+			get_string('sent', 'assignsubmission_mailsimulator') . ': ' . date('Y-m-d H:i', $reply->timesent) . ')</small><br />' .
+				$text['text']) . ($reply->attachment>0 ? $this->get_files_str($reply->id, $reply->userid) : '');
                     }
                     echo '</div>';
                 } else {
