@@ -1671,18 +1671,13 @@ class mailbox {
                 unset($_POST['completion']);
 
                 foreach ($_POST as $key => $value) {
-                    $obj = new stdClass();
                     $karr = explode('_', $key);
 
-                    if ($karr[0] == 'gainedweight') {
-                        $obj->id = $karr[1];
-                        $obj->$karr[0] = $value;
-                        $sarr[$karr[1]] = $obj;
-                    }
                     if ($karr[0] == 'feedback') {
                         $value = htmlspecialchars($value, ENT_QUOTES);
                     }
-                    $sarr[$karr[1]]->$karr[0] = $value;
+                    $sarr[$karr[1]]['id'] = $karr[1];
+                    $sarr[$karr[1]][$karr[0]] = $value;
                 }
 
                 foreach ($sarr as $dataobject) {
