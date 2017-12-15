@@ -214,9 +214,9 @@ class mail_form extends moodleform {
                 $errors['message'] = get_string('err_emptymessage', 'assignsubmission_mailsimulator');
             }
         }
-        if ($data['timesent'] > time()) {
-            $errors['timesent'] = get_string('err_date', 'assignsubmission_mailsimulator');
-        }
+        //if ($data['timesent'] > time()) {
+        //    $errors['timesent'] = get_string('err_date', 'assignsubmission_mailsimulator');
+        //}
         if (!isset($data['to'])) {
             $errors['to'] = get_string('err_reciever', 'assignsubmission_mailsimulator');
         }
