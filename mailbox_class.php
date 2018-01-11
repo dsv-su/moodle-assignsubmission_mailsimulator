@@ -464,13 +464,14 @@ class mailbox {
                     WHERE sm.userid = ' . $userid . '
                     AND m.assignment = ' . $this->cm->instance;
         } else {
-            $sql = 'SELECT signed.mailid AS id, m.userid, m.parent, m.priority, m.sender, m.subject, m.message,
+            $sql = 'SELECT sm.mailid AS id, m.userid, m.parent, m.priority, m.sender, m.subject, m.message,
                     m.timesent, m.attachment
-                    FROM {assignsubmission_mail_sgndml} AS signed
-                    LEFT JOIN {assignsubmission_mail_mail} as m ON m.id = signed.mailid
-                    WHERE signed.userid = ' . $userid . '
+                    FROM {assignsubmission_mail_sgndml} AS sm
+                    LEFT JOIN {assignsubmission_mail_mail} as m ON m.id = sm.mailid
+                    WHERE sm.userid = ' . $userid . '
                     AND m.assignment = ' . $this->cm->instance;
         }
+	$sql .= ' ORDER BY sm.mailid ASC';
 
         return $DB->get_records_sql($sql);
     }
