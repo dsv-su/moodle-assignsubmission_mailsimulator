@@ -309,6 +309,31 @@ class assign_submission_mailsimulator extends assign_submission_plugin {
         $finaltext .= html_writer::end_tag('html');
         $files[get_string('mailsimulatorfilename', 'assignsubmission_mailsimulator')] = array($finaltext);
 
+        $mails = $DB->get_records('assignsubmission_mail_mail', array(
+            'userid' => $userid,
+            'assignment' => $cm->instance
+        ));
+
+        foreach ($mails as $mid => $mail) {
+
+            $fs = get_file_storage();
+            $attachments = $fs->get_area_files($this->assignment->get_context()->id,
+                'assignsubmission_mailsimulator',
+                'attachment',
+                $mid,
+                'timemodified',
+                false);
+
+            foreach ($attachments as $file) {
+                // Do we return the full folder path or just the file name?
+                if (isset($submission->exportfullpath) && $submission->exportfullpath == false) {
+                    $files[$file->get_filename()] = $file;
+                } else {
+                    $files[$file->get_filepath().$file->get_filename()] = $file;
+                }
+            }
+        }
+
         return $files;
     }
 
